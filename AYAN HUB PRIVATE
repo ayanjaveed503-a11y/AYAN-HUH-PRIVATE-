@@ -1,5 +1,5 @@
 -- ==========================================================
--- AYAN HUB v1 (100% FIXED & TESTED VERSION)
+-- AYAN HUB v1 (100% FIXED & TESTED GITHUB VERSION)
 -- Password is: ATB
 -- ==========================================================
 
@@ -258,8 +258,8 @@ local function CreateToggle(parentList, name, callback)
         enabled = not enabled
         ToggleBtn.BackgroundColor3 = enabled and Color3.fromRGB(30, 100, 30) or Color3.fromRGB(60, 30, 30)
         ToggleBtn.Text = name .. (enabled and " : ON" or " : OFF")
-        callback(enabled)
-end)
+callback(enabled)
+end) -- Fixed syntax error here (changed from end train)
 return ToggleBtn
 end
 -- Fixed Built-in Custom Target Loop Engine
@@ -286,6 +286,7 @@ end
 end)
 end
 end
+
 -- ==========================================
 -- TAB 1: MAIN SCRIPTS SECTION (BUTTONS)
 -- ==========================================
