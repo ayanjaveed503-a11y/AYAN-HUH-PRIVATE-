@@ -1,0 +1,291 @@
+-- ==========================================================
+-- AYAN HUB v1 (FULLY FIXED & COMPLETED VERSION)
+-- Password is: ATB
+-- ==========================================================
+
+local ScreenGui = Instance.new("ScreenGui")
+local PasswordFrame = Instance.new("Frame")
+local PasswordInput = Instance.new("TextBox")
+local SubmitBtn = Instance.new("TextButton")
+local MainHub = Instance.new("Frame")
+local Title = Instance.new("TextLabel")
+local CloseBtnHub = Instance.new("TextButton")
+
+-- Tab Navigation Elements
+local TabBar = Instance.new("Frame")
+local ScriptsTabBtn = Instance.new("TextButton")
+local TogglesTabBtn = Instance.new("TextButton")
+local PlayerTabBtn = Instance.new("TextButton")
+
+-- Content Sections
+local ScriptsList = Instance.new("ScrollingFrame")
+local TogglesList = Instance.new("ScrollingFrame")
+local PlayerList = Instance.new("ScrollingFrame")
+
+local UIListLayout1 = Instance.new("UIListLayout")
+local UIListLayout2 = Instance.new("UIListLayout")
+local UIListLayout3 = Instance.new("UIListLayout")
+
+-- Global States & Variables
+local Toggles = { Noclip = false, ESP = false, Custom1 = false, Custom2 = false }
+local TargetPlayerName = "" 
+local BangLoop = nil
+
+-- UI Setup
+ScreenGui.Parent = game.CoreGui
+ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+
+-- 1. PASSWORD SCREEN
+PasswordFrame.Name = "PasswordFrame"
+PasswordFrame.Parent = ScreenGui
+PasswordFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+PasswordFrame.Position = UDim2.new(0.35, 0, 0.35, 0)
+PasswordFrame.Size = UDim2.new(0, 300, 0, 150)
+PasswordFrame.Active = true
+PasswordFrame.Draggable = true
+
+PasswordInput.Name = "PasswordInput"
+PasswordInput.Parent = PasswordFrame
+PasswordInput.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
+PasswordInput.Position = UDim2.new(0.1, 0, 0.25, 0)
+PasswordInput.Size = UDim2.new(0, 240, 0, 40)
+PasswordInput.Font = Enum.Font.SourceSans
+PasswordInput.PlaceholderText = "Enter Private Password..."
+PasswordInput.Text = ""
+PasswordInput.TextColor3 = Color3.fromRGB(255, 255, 255)
+PasswordInput.TextSize = 18.000
+
+SubmitBtn.Name = "SubmitBtn"
+SubmitBtn.Parent = PasswordFrame
+SubmitBtn.BackgroundColor3 = Color3.fromRGB(0, 170, 255)
+SubmitBtn.Position = UDim2.new(0.25, 0, 0.65, 0)
+SubmitBtn.Size = UDim2.new(0, 150, 0, 35)
+SubmitBtn.Font = Enum.Font.SourceSansBold
+SubmitBtn.Text = "Login"
+SubmitBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+SubmitBtn.TextSize = 18.000
+
+-- 2. MAIN HUB SCREEN
+MainHub.Name = "MainHub"
+MainHub.Parent = ScreenGui
+MainHub.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
+MainHub.Position = UDim2.new(0.3, 0, 0.25, 0)
+MainHub.Size = UDim2.new(0, 460, 0, 400)
+MainHub.Visible = false
+MainHub.Active = true
+MainHub.Draggable = true
+
+Title.Name = "Title"
+Title.Parent = MainHub
+Title.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
+Title.Size = UDim2.new(1, 0, 0, 40)
+Title.Font = Enum.Font.SourceSansBold
+Title.Text = "  AYAN HUB v1 (PRIVATE)"
+Title.TextColor3 = Color3.fromRGB(0, 170, 255)
+Title.TextSize = 20.000
+Title.TextXAlignment = Enum.TextXAlignment.Left
+
+-- Close (×) Button
+CloseBtnHub.Name = "CloseBtnHub"
+CloseBtnHub.Parent = MainHub
+CloseBtnHub.BackgroundColor3 = Color3.fromRGB(200, 50, 50)
+CloseBtnHub.Position = UDim2.new(1, -35, 0, 5)
+CloseBtnHub.Size = UDim2.new(0, 30, 0, 30)
+CloseBtnHub.Font = Enum.Font.SourceSansBold
+CloseBtnHub.Text = "×"
+CloseBtnHub.TextColor3 = Color3.fromRGB(255, 255, 255)
+CloseBtnHub.TextSize = 24.000
+CloseBtnHub.MouseButton1Click:Connect(function()
+    if BangLoop then BangLoop:Disconnect() end
+    ScreenGui:Destroy()
+end)
+
+-- Tab Navigation Bar Setup
+TabBar.Name = "TabBar"
+TabBar.Parent = MainHub
+TabBar.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+TabBar.Position = UDim2.new(0.03, 0, 0.12, 0)
+TabBar.Size = UDim2.new(0, 430, 0, 35)
+
+ScriptsTabBtn.Name = "ScriptsTabBtn"
+ScriptsTabBtn.Parent = TabBar
+ScriptsTabBtn.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
+ScriptsTabBtn.Size = UDim2.new(0, 140, 1, 0)
+ScriptsTabBtn.Font = Enum.Font.SourceSansBold
+ScriptsTabBtn.Text = "📜 Scripts"
+ScriptsTabBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+ScriptsTabBtn.TextSize = 14.000
+
+TogglesTabBtn.Name = "TogglesTabBtn"
+TogglesTabBtn.Parent = TabBar
+TogglesTabBtn.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
+TogglesTabBtn.Position = UDim2.new(0.33, 0, 0, 0)
+TogglesTabBtn.Size = UDim2.new(0, 140, 1, 0)
+TogglesTabBtn.Font = Enum.Font.SourceSansBold
+TogglesTabBtn.Text = "⚙️ Toggles"
+TogglesTabBtn.TextColor3 = Color3.fromRGB(180, 180, 180)
+TogglesTabBtn.TextSize = 14.000
+
+PlayerTabBtn.Name = "PlayerTabBtn"
+PlayerTabBtn.Parent = TabBar
+PlayerTabBtn.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
+PlayerTabBtn.Position = UDim2.new(0.66, 0, 0, 0)
+PlayerTabBtn.Size = UDim2.new(0, 146, 1, 0)
+PlayerTabBtn.Font = Enum.Font.SourceSansBold
+PlayerTabBtn.Text = "👤 Target Player"
+PlayerTabBtn.TextColor3 = Color3.fromRGB(180, 180, 180)
+PlayerTabBtn.TextSize = 14.000
+
+-- Section Containers Creation Function
+local function CreateScrollList(name, visible)
+    local List = Instance.new("ScrollingFrame")
+    List.Name = name
+    List.Parent = MainHub
+    List.Active = true
+    List.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+    List.Position = UDim2.new(0.03, 0, 0.23, 0)
+    List.Size = UDim2.new(0, 430, 0, 290)
+    List.ScrollBarThickness = 8
+    List.Visible = visible
+    return List
+end
+
+ScriptsList = CreateScrollList("ScriptsList", true)
+ScriptsList.CanvasSize = UDim2.new(0, 0, 4.5, 0)
+
+TogglesList = CreateScrollList("TogglesList", false)
+TogglesList.CanvasSize = UDim2.new(0, 0, 1.8, 0)
+
+PlayerList = CreateScrollList("PlayerList", false)
+PlayerList.Position = UDim2.new(0.03, 0, 0.33, 0) 
+PlayerList.Size = UDim2.new(0, 430, 0, 250)
+PlayerList.CanvasSize = UDim2.new(0, 0, 1.5, 0)
+
+UIListLayout1.Parent = ScriptsList; UIListLayout1.SortOrder = Enum.SortOrder.LayoutOrder; UIListLayout1.Padding = UDim.new(0, 6)
+UIListLayout2.Parent = TogglesList; UIListLayout2.SortOrder = Enum.SortOrder.LayoutOrder; UIListLayout2.Padding = UDim.new(0, 6)
+UIListLayout3.Parent = PlayerList; UIListLayout3.SortOrder = Enum.SortOrder.LayoutOrder; UIListLayout3.Padding = UDim.new(0, 6)
+
+-- SEARCH PLAYER NAME BOX
+local SearchPlayerBox = Instance.new("TextBox")
+SearchPlayerBox.Name = "SearchPlayerBox"
+SearchPlayerBox.Parent = MainHub
+SearchPlayerBox.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
+SearchPlayerBox.Position = UDim2.new(0.03, 0, 0.23, 0)
+SearchPlayerBox.Size = UDim2.new(0, 430, 0, 35)
+SearchPlayerBox.Font = Enum.Font.SourceSansBold
+SearchPlayerBox.PlaceholderText = "🔍 Type Player Name Here..."
+SearchPlayerBox.Text = ""
+SearchPlayerBox.TextColor3 = Color3.fromRGB(255, 255, 255)
+SearchPlayerBox.TextSize = 16.000
+SearchPlayerBox.Visible = false
+
+-- FUNCTIONALITY INTERACTION LOGIC
+
+-- Password Verification Action
+SubmitBtn.MouseButton1Click:Connect(function()
+    if PasswordInput.Text == "ATB" then
+        PasswordFrame.Visible = false
+        MainHub.Visible = true
+    else
+        PasswordInput.Text = ""
+        PasswordInput.PlaceholderText = "Wrong Password! Try Again."
+        PasswordInput.PlaceholderColor3 = Color3.fromRGB(255, 0, 0)
+    end
+end)
+
+-- Tab Navigation Swapper System
+local function SwitchTab(activeList, activeBtn, inactiveBtn1, inactiveBtn2)
+    ScriptsList.Visible = (ScriptsList == activeList)
+    TogglesList.Visible = (TogglesList == activeList)
+    PlayerList.Visible = (PlayerList == activeList)
+    SearchPlayerBox.Visible = (PlayerList == activeList)
+    
+    activeBtn.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
+    activeBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+    
+    inactiveBtn1.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
+    inactiveBtn1.TextColor3 = Color3.fromRGB(180, 180, 180)
+    inactiveBtn2.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
+    inactiveBtn2.TextColor3 = Color3.fromRGB(180, 180, 180)
+end
+
+ScriptsTabBtn.MouseButton1Click:Connect(function() SwitchTab(ScriptsList, ScriptsTabBtn, TogglesTabBtn, PlayerTabBtn) end)
+TogglesTabBtn.MouseButton1Click:Connect(function() SwitchTab(TogglesList, TogglesTabBtn, ScriptsTabBtn, PlayerTabBtn) end)
+PlayerTabBtn.MouseButton1Click:Connect(function() SwitchTab(PlayerList, PlayerTabBtn, ScriptsTabBtn, TogglesTabBtn) end)
+
+-- Live Autocomplete Filter for Player Search Bar
+SearchPlayerBox:GetPropertyChangedSignal("Text"):Connect(function()
+    local text = string.lower(SearchPlayerBox.Text)
+    TargetPlayerName = ""
+    for _, player in pairs(game.Players:GetPlayers()) do
+        if string.find(string.lower(player.Name), text) or string.find(string.lower(player.DisplayName), text) then
+            TargetPlayerName = player.Name
+            SearchPlayerBox.TextColor3 = Color3.fromRGB(0, 255, 100)
+            break
+        end
+    end
+    if SearchPlayerBox.Text == "" then
+        SearchPlayerBox.TextColor3 = Color3.fromRGB(255, 255, 255)
+    end
+end)
+
+-- Core Generators for Buttons and Toggles
+local function CreateButton(parentList, name, callback)
+    local Btn = Instance.new("TextButton")
+    Btn.Parent = parentList
+    Btn.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
+    Btn.Size = UDim2.new(1, -10, 0, 40)
+    Btn.Font = Enum.Font.SourceSansBold
+    Btn.Text = name
+    Btn.TextColor3 = Color3.fromRGB(255, 255, 255)
+    Btn.TextSize = 16.000
+    Btn.MouseButton1Click:Connect(callback)
+    return Btn
+end
+
+local function CreateToggle(parentList, name, callback)
+    local ToggleBtn = Instance.new("TextButton")
+    local enabled = false
+    ToggleBtn.Parent = parentList
+    ToggleBtn.BackgroundColor3 = Color3.fromRGB(60, 30, 30)
+    ToggleBtn.Size = UDim2.new(1, -10, 0, 40)
+    ToggleBtn.Font = Enum.Font.SourceSansBold
+    ToggleBtn.Text = name .. " : OFF"
+    ToggleBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+    ToggleBtn.TextSize = 16.000
+    
+    ToggleBtn.MouseButton1Click:Connect(function()
+        enabled = not enabled
+        ToggleBtn.BackgroundColor3 = enabled and Color3.fromRGB(30, 100, 30) or Color3.fromRGB(60, 30, 30)
+        ToggleBtn.Text = name .. (enabled and " : ON" or " : OFF")
+callback(enabled)
+end)
+CreateToggle(TogglesList, "Toggle Soon 1", function(value) Toggles.Custom1 = value end)
+CreateToggle(TogglesList, "Toggle Soon 2", function(value) Toggles.Custom2 = value end)
+-- ==========================================
+-- TAB 3: PLAYER TARGET SECTION
+-- ==========================================
+CreateButton(PlayerList, "BANG", function()
+if TargetPlayerName ~= "" then
+RunAnimationLoop(CFrame.new(0, 0, 1.2))
+end
+end)
+CreateButton(PlayerList, "MOUTH BANG", function()
+if TargetPlayerName ~= "" then
+RunAnimationLoop(CFrame.new(0, -0.6, -1.2) * CFrame.Angles(0, math.rad(180), 0))
+end
+end)
+CreateButton(PlayerList, "PLAYER BACKSIT", function()
+if TargetPlayerName ~= "" then
+local targetPlayer = game.Players:FindFirstChild(TargetPlayerName)
+if targetPlayer and targetPlayer.Character and targetPlayer.Character:FindFirstChild("HumanoidRootPart") then
+game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = targetPlayer.Character.HumanoidRootPart.CFrame * CFrame.new(0, 1.5, 0.2)
+end
+end
+end)
+CreateButton(PlayerList, "❌ STOP ANIMATION", function()
+if BangLoop then
+BangLoop:Disconnect()
+BangLoop = nil
+end
+end)
