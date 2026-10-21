@@ -1,5 +1,5 @@
 -- ==========================================================
--- AYAN HUB v1 (100% FULLY WORKING & FIXED PRODUCTION)
+-- AYAN HUB v1 (MINIMIZE & MAXIMIZE PANEL UPDATE)
 -- Password is: ATB
 -- ==========================================================
 
@@ -10,6 +10,8 @@ local SubmitBtn = Instance.new("TextButton")
 local MainHub = Instance.new("Frame")
 local Title = Instance.new("TextLabel")
 local CloseBtnHub = Instance.new("TextButton")
+local MinimizeBtnHub = Instance.new("TextButton") -- New Minimize Button
+local OpenIconBtn = Instance.new("TextButton") -- New Floating Toggle Icon
 
 -- Tab Navigation Elements
 local TabBar = Instance.new("Frame")
@@ -96,11 +98,33 @@ CloseBtnHub.Font = Enum.Font.SourceSansBold
 CloseBtnHub.Text = "×"
 CloseBtnHub.TextColor3 = Color3.fromRGB(255, 255, 255)
 CloseBtnHub.TextSize = 24.000
-CloseBtnHub.MouseButton1Click:Connect(function()
-    if BangLoop then BangLoop:Disconnect() end
-    if HeadSitLoop then HeadSitLoop:Disconnect() end
-    ScreenGui:Destroy()
-end)
+
+-- Minimize (_) Button Implementation
+MinimizeBtnHub.Name = "MinimizeBtnHub"
+MinimizeBtnHub.Parent = MainHub
+MinimizeBtnHub.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
+MinimizeBtnHub.Position = UDim2.new(1, -70, 0, 5)
+MinimizeBtnHub.Size = UDim2.new(0, 30, 0, 30)
+MinimizeBtnHub.Font = Enum.Font.SourceSansBold
+MinimizeBtnHub.Text = "_"
+MinimizeBtnHub.TextColor3 = Color3.fromRGB(255, 255, 255)
+MinimizeBtnHub.TextSize = 20.000
+
+-- Floating Open Icon (Small button when minimized)
+OpenIconBtn.Name = "OpenIconBtn"
+OpenIconBtn.Parent = ScreenGui
+OpenIconBtn.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
+OpenIconBtn.BorderColor3 = Color3.fromRGB(0, 170, 255)
+OpenIconBtn.BorderSizePixel = 2
+OpenIconBtn.Position = UDim2.new(0.05, 0, 0.15, 0)
+OpenIconBtn.Size = UDim2.new(0, 90, 0, 35)
+OpenIconBtn.Font = Enum.Font.SourceSansBold
+OpenIconBtn.Text = "AYAN HUB"
+OpenIconBtn.TextColor3 = Color3.fromRGB(0, 170, 255)
+OpenIconBtn.TextSize = 14.000
+OpenIconBtn.Visible = false
+OpenIconBtn.Active = true
+OpenIconBtn.Draggable = true
 
 -- Tab Navigation Bar Setup
 TabBar.Name = "TabBar"
@@ -226,36 +250,50 @@ SubmitBtn.MouseButton1Click:Connect(function()
     end
 end)
 
+-- Minimize Button Click Event
+MinimizeBtnHub.MouseButton1Click:Connect(function()
+    MainHub.Visible = false
+    OpenIconBtn.Visible = true
+end)
+
+-- Floating Open Button Click Event (Restore Hub)
+OpenIconBtn.MouseButton1Click:Connect(function()
+    OpenIconBtn.Visible = false
+    MainHub.Visible = true
+end)
+
+-- Close Button Click -> Deletes EVERYTHING
+CloseBtnHub.MouseButton1Click:Connect(function()
+    if BangLoop then BangLoop:Disconnect() end
+    if HeadSitLoop then HeadSitLoop:Disconnect() end
+ScreenGui:Destroy()
+end)
 -- Tab Navigation Swapper System
 local function SwitchTab(activeList, activeBtn, inactiveBtn1, inactiveBtn2)
-    ScriptsList.Visible = (ScriptsList == activeList)
-    TogglesList.Visible = (TogglesList == activeList)
-    PlayerList.Visible = (PlayerList == activeList)
-    PlayerDropdown.Visible = (PlayerList == activeList)
-    
-    if PlayerList == activeList then RefreshPlayerDropdown() end
-    
-    activeBtn.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
-    activeBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
-    inactiveBtn1.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
-    inactiveBtn1.TextColor3 = Color3.fromRGB(180, 180, 180)
-    inactiveBtn2.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
-    inactiveBtn2.TextColor3 = Color3.fromRGB(180, 180, 180)
+ScriptsList.Visible = (ScriptsList == activeList)
+TogglesList.Visible = (TogglesList == activeList)
+PlayerList.Visible = (PlayerList == activeList)
+PlayerDropdown.Visible = (PlayerList == activeList)
+if PlayerList == activeList then RefreshPlayerDropdown() end
+activeBtn.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
+activeBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+inactiveBtn1.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
+inactiveBtn1.TextColor3 = Color3.fromRGB(180, 180, 180)
+inactiveBtn2.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
+inactiveBtn2.TextColor3 = Color3.fromRGB(180, 180, 180)
 end
-
 ScriptsTabBtn.MouseButton1Click:Connect(function() SwitchTab(ScriptsList, ScriptsTabBtn, TogglesTabBtn, PlayerTabBtn) end)
 TogglesTabBtn.MouseButton1Click:Connect(function() SwitchTab(TogglesList, TogglesTabBtn, ScriptsTabBtn, PlayerTabBtn) end)
 PlayerTabBtn.MouseButton1Click:Connect(function() SwitchTab(PlayerList, PlayerTabBtn, ScriptsTabBtn, TogglesTabBtn) end)
-
 -- Core Generators for Buttons and Toggles
 local function CreateButton(parentList, name, callback)
-    local Btn = Instance.new("TextButton")
-    Btn.Parent = parentList
-    Btn.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
-    Btn.Size = UDim2.new(1, -10, 0, 40)
-    Btn.Font = Enum.Font.SourceSansBold
-    Btn.Text = name
-    Btn.TextColor3 = Color3.fromRGB(255, 255, 255)
+local Btn = Instance.new("TextButton")
+Btn.Parent = parentList
+Btn.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
+Btn.Size = UDim2.new(1, -10, 0, 40)
+Btn.Font = Enum.Font.SourceSansBold
+Btn.Text = name
+Btn.TextColor3 = Color3.fromRGB(255, 255, 255)
 Btn.TextSize = 16.000
 Btn.MouseButton1Click:Connect(callback)
 return Btn
