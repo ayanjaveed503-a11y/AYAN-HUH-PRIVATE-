@@ -426,3 +426,119 @@ CreateButton(PlayerList, "❌ STOP ANIMATION", function()
 if BangLoop then BangLoop:Disconnect(); BangLoop = nil end
 if HeadSitLoop then HeadSitLoop:Disconnect(); HeadSitLoop = nil end
 end)
+
+-- ==========================================
+-- TAB 1: MAIN SCRIPTS SECTION (BUTTONS)
+-- ==========================================
+CreateButton(ScriptsList, "SKY GLITCHER (FE)", function() loadstring(game:HttpGet("rawscripts.net"))() end)
+CreateButton(ScriptsList, "EMOTE", function() loadstring(game:HttpGet("githubusercontent.com"))() end)
+CreateButton(ScriptsList, "SERVER HOP", function() loadstring(game:HttpGet("pastebin.com"))() end)
+for i = 1, 10 do
+CreateButton(ScriptsList, "Soon...", function() loadstring(game:HttpGet("pastebin.com_" .. i))() end)
+end
+-- ==========================================
+-- TAB 2: TOGGLES SECTION (ON/OFF)
+-- ==========================================
+CreateToggle(TogglesList, "ADVANCE NOCLIP", function(value) Toggles.Noclip = value end)
+game:GetService("RunService").Stepped:Connect(function()
+if Toggles.Noclip and game.Players.LocalPlayer.Character then
+for _, part in pairs(game.Players.LocalPlayer.Character:GetDescendants()) do
+if part:IsA("BasePart") then part.CanCollide = false end
+end
+end
+end)
+CreateToggle(TogglesList, "ESP (ALL PLAYERS)", function(value)
+Toggles.ESP = value
+if not value then
+for _, p in pairs(game.Players:GetPlayers()) do
+if p.Character and p.Character:FindFirstChild("HubESP") then p.Character.HubESP:Destroy() end
+end
+end
+end)
+game:GetService("RunService").Heartbeat:Connect(function()
+if Toggles.ESP then
+for _, player in pairs(game.Players:GetPlayers()) do
+if player ~= game.Players.LocalPlayer and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
+if not player.Character:FindFirstChild("HubESP") then
+local Box = Instance.new("Highlight")
+Box.Name = "HubESP"
+Box.Parent = player.Character
+Box.FillColor = Color3.fromRGB(0, 170, 255)
+Box.OutlineColor = Color3.fromRGB(255, 255, 255)
+end
+end
+end
+end
+end)
+-- 3. WALKFLING TOGGLE (NEW ENGINE WORKING natively)
+CreateToggle(TogglesList, "WALKFLING", function(value)
+Toggles.WalkFling = value
+end)
+game:GetService("RunService").Heartbeat:Connect(function()
+if Toggles.WalkFling then
+local p1 = game.Players.LocalPlayer.Character
+if p1 and p1:FindFirstChild("HumanoidRootPart") then
+local hrp = p1.HumanoidRootPart
+-- High angular velocity bypass simulation loop
+hrp.Velocity = Vector3.new(0, 0, 0)
+hrp.RotVelocity = Vector3.new(0, 25000, 0)
+end
+end
+end)
+-- 4. ANTIFLING TOGGLE (STABILIZES HRP FOR SAFETY)
+CreateToggle(TogglesList, "ANTIFLING", function(value)
+Toggles.AntiFling = value
+end)
+game:GetService("RunService").Heartbeat:Connect(function()
+if Toggles.AntiFling then
+local p1 = game.Players.LocalPlayer.Character
+if p1 and p1:FindFirstChild("HumanoidRootPart") then
+for _, part in pairs(p1:GetDescendants()) do
+if part:IsA("BasePart") then
+part.Velocity = Vector3.new(0, 0, 0)
+part.RotVelocity = Vector3.new(0, 0, 0)
+end
+end
+end
+end
+end)
+
+CreateToggle(TogglesList, "Toggle Soon 1", function(value) Toggles.Custom1 = value end)
+CreateToggle(TogglesList, "Toggle Soon 2", function(value) Toggles.Custom2 = value end)
+-- ==========================================
+-- TAB 3: PLAYER TARGET SECTION
+-- ==========================================
+CreateButton(PlayerList, "BANG", function()
+if TargetPlayerName ~= "" then RunAnimationLoop(CFrame.new(0, 0, 1.2)) end
+end)
+CreateButton(PlayerList, "MOUTH BANG", function()
+if TargetPlayerName ~= "" then RunAnimationLoop(CFrame.new(0, -0.6, -1.2) * CFrame.Angles(0, math.rad(180), 0)) end
+end)
+CreateButton(PlayerList, "PLAYER BACKSIT", function()
+if TargetPlayerName ~= "" then
+local targetPlayer = game.Players:FindFirstChild(TargetPlayerName)
+if targetPlayer and targetPlayer.Character and targetPlayer.Character:FindFirstChild("HumanoidRootPart") then
+game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = targetPlayer.Character.HumanoidRootPart.CFrame * CFrame.new(0, 1.5, 0.2)
+end
+end
+end)
+CreateButton(PlayerList, "PLAYER HEADSIT", function()
+if HeadSitLoop then HeadSitLoop:Disconnect() end
+if TargetPlayerName ~= "" then
+local p1 = game.Players.LocalPlayer.Character
+local p2 = game.Workspace:FindFirstChild(TargetPlayerName)
+if p1 and p2 and p1:FindFirstChild("HumanoidRootPart") and p2:FindFirstChild("Head") then
+HeadSitLoop = game:GetService("RunService").Heartbeat:Connect(function()
+if p1 and p2 and p2:FindFirstChild("Head") and p1:FindFirstChild("HumanoidRootPart") then
+p1.HumanoidRootPart.CFrame = p2.Head.CFrame * CFrame.new(0, 1.3, 0)
+else
+if HeadSitLoop then HeadSitLoop:Disconnect() end
+end
+end)
+end
+end
+end)
+CreateButton(PlayerList, "❌ STOP ANIMATION", function()
+if BangLoop then BangLoop:Disconnect(); BangLoop = nil end
+if HeadSitLoop then HeadSitLoop:Disconnect(); HeadSitLoop = nil end
+end)
