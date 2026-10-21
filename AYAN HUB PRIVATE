@@ -1,8 +1,7 @@
 -- ==========================================================
--- AYAN HUB v1 (MINIMIZE & MAXIMIZE PANEL UPDATE)
+-- AYAN HUB v1 (PREMIUM CYBERPUNK EDITION)
 -- Password is: ATB
 -- ==========================================================
-
 local ScreenGui = Instance.new("ScreenGui")
 local PasswordFrame = Instance.new("Frame")
 local PasswordInput = Instance.new("TextBox")
@@ -10,535 +9,294 @@ local SubmitBtn = Instance.new("TextButton")
 local MainHub = Instance.new("Frame")
 local Title = Instance.new("TextLabel")
 local CloseBtnHub = Instance.new("TextButton")
-local MinimizeBtnHub = Instance.new("TextButton") -- New Minimize Button
-local OpenIconBtn = Instance.new("TextButton") -- New Floating Toggle Icon
+local MinimizeBtnHub = Instance.new("TextButton") 
+local OpenIconBtn = Instance.new("TextButton") 
 
--- Tab Navigation Elements
 local TabBar = Instance.new("Frame")
-local ScriptsTabBtn = Instance.new("TextButton")
-local TogglesTabBtn = Instance.new("TextButton")
-local PlayerTabBtn = Instance.new("TextButton")
+local ScriptsTabBtn, TogglesTabBtn, PlayerTabBtn = Instance.new("TextButton"), Instance.new("TextButton"), Instance.new("TextButton")
 
--- Content Sections
-local ScriptsList = Instance.new("ScrollingFrame")
-local TogglesList = Instance.new("ScrollingFrame")
-local PlayerList = Instance.new("ScrollingFrame")
+local ScriptsList, TogglesList, PlayerList = Instance.new("ScrollingFrame"), Instance.new("ScrollingFrame"), Instance.new("ScrollingFrame")
+local UIListLayout1, UIListLayout2, UIListLayout3 = Instance.new("UIListLayout"), Instance.new("UIListLayout"), Instance.new("UIListLayout")
 
-local UIListLayout1 = Instance.new("UIListLayout")
-local UIListLayout2 = Instance.new("UIListLayout")
-local UIListLayout3 = Instance.new("UIListLayout")
+local Toggles = { Noclip = false, ESP = false, WalkFling = false, AntiFling = false, Custom1 = false, Custom2 = false }
+local TargetPlayerName, BangLoop, HeadSitLoop = "", nil, nil
 
--- Global States & Variables
-local Toggles = { Noclip = false, ESP = false, Custom1 = false, Custom2 = false }
-local TargetPlayerName = "" 
-local BangLoop = nil
-local HeadSitLoop = nil
-
--- UI Setup
 ScreenGui.Parent = game.CoreGui
 ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 
--- 1. PASSWORD SCREEN
+-- PREMIUM UI UTILITIES (ROUNDED & BORDERS)
+local function StyleElement(element, radius, strokeColor)
+    local corner = Instance.new("UICorner")
+    corner.CornerRadius = UDim.new(0, radius)
+    corner.Parent = element
+    if strokeColor then
+        local stroke = Instance.new("UIStroke")
+        stroke.Color = strokeColor
+        stroke.Thickness = 1.5
+        stroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+        stroke.Parent = element
+    end
+end
+
+-- 1. PASSWORD SCREEN (PREMIUM MOD)
 PasswordFrame.Name = "PasswordFrame"
 PasswordFrame.Parent = ScreenGui
-PasswordFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+PasswordFrame.BackgroundColor3 = Color3.fromRGB(18, 18, 18)
 PasswordFrame.Position = UDim2.new(0.35, 0, 0.35, 0)
-PasswordFrame.Size = UDim2.new(0, 300, 0, 150)
+PasswordFrame.Size = UDim2.new(0, 320, 0, 160)
 PasswordFrame.Active = true
 PasswordFrame.Draggable = true
+StyleElement(PasswordFrame, 8, Color3.fromRGB(0, 170, 255))
 
 PasswordInput.Name = "PasswordInput"
 PasswordInput.Parent = PasswordFrame
-PasswordInput.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
-PasswordInput.Position = UDim2.new(0.1, 0, 0.25, 0)
-PasswordInput.Size = UDim2.new(0, 240, 0, 40)
-PasswordInput.Font = Enum.Font.SourceSans
+PasswordInput.BackgroundColor3 = Color3.fromRGB(28, 28, 28)
+PasswordInput.Position = UDim2.new(0.1, 0, 0.22, 0)
+PasswordInput.Size = UDim2.new(0, 256, 0, 42)
+PasswordInput.Font = Enum.Font.GothamBold
 PasswordInput.PlaceholderText = "Enter Private Password..."
 PasswordInput.Text = ""
 PasswordInput.TextColor3 = Color3.fromRGB(255, 255, 255)
-PasswordInput.TextSize = 18.000
+PasswordInput.TextSize = 14
+StyleElement(PasswordInput, 6, Color3.fromRGB(45, 45, 45))
 
 SubmitBtn.Name = "SubmitBtn"
 SubmitBtn.Parent = PasswordFrame
-SubmitBtn.BackgroundColor3 = Color3.fromRGB(0, 170, 255)
-SubmitBtn.Position = UDim2.new(0.25, 0, 0.65, 0)
-SubmitBtn.Size = UDim2.new(0, 150, 0, 35)
-SubmitBtn.Font = Enum.Font.SourceSansBold
-SubmitBtn.Text = "Login"
+SubmitBtn.BackgroundColor3 = Color3.fromRGB(0, 140, 220)
+SubmitBtn.Position = UDim2.new(0.25, 0, 0.62, 0)
+SubmitBtn.Size = UDim2.new(0, 160, 0, 38)
+SubmitBtn.Font = Enum.Font.GothamBold
+SubmitBtn.Text = "ACCESS HUB"
 SubmitBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
-SubmitBtn.TextSize = 18.000
+SubmitBtn.TextSize = 13
+StyleElement(SubmitBtn, 6)
 
--- 2. MAIN HUB SCREEN
+-- 2. MAIN HUB SCREEN (PREMIUM MOD)
 MainHub.Name = "MainHub"
 MainHub.Parent = ScreenGui
-MainHub.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
+MainHub.BackgroundColor3 = Color3.fromRGB(14, 14, 14)
 MainHub.Position = UDim2.new(0.3, 0, 0.25, 0)
 MainHub.Size = UDim2.new(0, 460, 0, 400)
 MainHub.Visible = false
 MainHub.Active = true
 MainHub.Draggable = true
+StyleElement(MainHub, 10, Color3.fromRGB(0, 170, 255))
 
 Title.Name = "Title"
 Title.Parent = MainHub
-Title.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
-Title.Size = UDim2.new(1, 0, 0, 40)
-Title.Font = Enum.Font.SourceSansBold
-Title.Text = "  AYAN HUB v1 (PRIVATE)"
+Title.BackgroundColor3 = Color3.fromRGB(22, 22, 22)
+Title.Size = UDim2.new(1, 0, 0, 42)
+Title.Font = Enum.Font.GothamBold
+Title.Text = "   AYAN HUB v1  //  PRIVATE"
 Title.TextColor3 = Color3.fromRGB(0, 170, 255)
-Title.TextSize = 20.000
+Title.TextSize = 14
 Title.TextXAlignment = Enum.TextXAlignment.Left
+StyleElement(Title, 10)
+local TitleHideCut = Instance.new("Frame", Title) -- Fix top corner rounding artifacts
+TitleHideCut.Size = UDim2.new(1, 0, 0.5, 0) TitleHideCut.Position = UDim2.new(0,0,0.5,0) TitleHideCut.BackgroundColor3 = Color3.fromRGB(22,22,22) TitleHideCut.BorderSizePixel = 0 TitleHideCut.ZIndex = 0
 
--- Close (×) Button
 CloseBtnHub.Name = "CloseBtnHub"
 CloseBtnHub.Parent = MainHub
-CloseBtnHub.BackgroundColor3 = Color3.fromRGB(200, 50, 50)
-CloseBtnHub.Position = UDim2.new(1, -35, 0, 5)
-CloseBtnHub.Size = UDim2.new(0, 30, 0, 30)
-CloseBtnHub.Font = Enum.Font.SourceSansBold
-CloseBtnHub.Text = "×"
+CloseBtnHub.BackgroundColor3 = Color3.fromRGB(220, 60, 60)
+CloseBtnHub.Position = UDim2.new(1, -34, 0, 8)
+CloseBtnHub.Size = UDim2.new(0, 26, 0, 26)
+CloseBtnHub.Font = Enum.Font.GothamBold
+CloseBtnHub.Text = "✕"
 CloseBtnHub.TextColor3 = Color3.fromRGB(255, 255, 255)
-CloseBtnHub.TextSize = 24.000
+CloseBtnHub.TextSize = 14
+StyleElement(CloseBtnHub, 5)
 
--- Minimize (_) Button Implementation
 MinimizeBtnHub.Name = "MinimizeBtnHub"
 MinimizeBtnHub.Parent = MainHub
-MinimizeBtnHub.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
-MinimizeBtnHub.Position = UDim2.new(1, -70, 0, 5)
-MinimizeBtnHub.Size = UDim2.new(0, 30, 0, 30)
-MinimizeBtnHub.Font = Enum.Font.SourceSansBold
-MinimizeBtnHub.Text = "_"
-MinimizeBtnHub.TextColor3 = Color3.fromRGB(255, 255, 255)
-MinimizeBtnHub.TextSize = 20.000
+MinimizeBtnHub.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
+MinimizeBtnHub.Position = UDim2.new(1, -66, 0, 8)
+MinimizeBtnHub.Size = UDim2.new(0, 26, 0, 26)
+MinimizeBtnHub.Font = Enum.Font.GothamBold
+MinimizeBtnHub.Text = "—"
+MinimizeBtnHub.TextColor3 = Color3.fromRGB(200, 200, 200)
+MinimizeBtnHub.TextSize = 12
+StyleElement(MinimizeBtnHub, 5)
 
--- Floating Open Icon (Small button when minimized)
 OpenIconBtn.Name = "OpenIconBtn"
 OpenIconBtn.Parent = ScreenGui
-OpenIconBtn.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
-OpenIconBtn.BorderColor3 = Color3.fromRGB(0, 170, 255)
-OpenIconBtn.BorderSizePixel = 2
+OpenIconBtn.BackgroundColor3 = Color3.fromRGB(14, 14, 14)
 OpenIconBtn.Position = UDim2.new(0.05, 0, 0.15, 0)
-OpenIconBtn.Size = UDim2.new(0, 90, 0, 35)
-OpenIconBtn.Font = Enum.Font.SourceSansBold
+OpenIconBtn.Size = UDim2.new(0, 100, 0, 38)
+OpenIconBtn.Font = Enum.Font.GothamBold
 OpenIconBtn.Text = "AYAN HUB"
 OpenIconBtn.TextColor3 = Color3.fromRGB(0, 170, 255)
-OpenIconBtn.TextSize = 14.000
+OpenIconBtn.TextSize = 12
 OpenIconBtn.Visible = false
 OpenIconBtn.Active = true
 OpenIconBtn.Draggable = true
+StyleElement(OpenIconBtn, 6, Color3.fromRGB(0, 170, 255))
 
--- Tab Navigation Bar Setup
 TabBar.Name = "TabBar"
 TabBar.Parent = MainHub
-TabBar.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
-TabBar.Position = UDim2.new(0.03, 0, 0.12, 0)
-TabBar.Size = UDim2.new(0, 430, 0, 35)
+TabBar.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+TabBar.Position = UDim2.new(0.03, 0, 0.13, 0)
+TabBar.Size = UDim2.new(0, 432, 0, 36)
+StyleElement(TabBar, 6)
 
-ScriptsTabBtn.Name = "ScriptsTabBtn"
-ScriptsTabBtn.Parent = TabBar
-ScriptsTabBtn.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
-ScriptsTabBtn.Size = UDim2.new(0, 140, 1, 0)
-ScriptsTabBtn.Font = Enum.Font.SourceSansBold
-ScriptsTabBtn.Text = "📜 Scripts"
-ScriptsTabBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
-ScriptsTabBtn.TextSize = 14.000
+local function SetupTabBtn(btn, text, pos, textColor, active)
+    btn.Parent = TabBar
+    btn.BackgroundColor3 = active and Color3.fromRGB(30, 30, 30) or Color3.fromRGB(20, 20, 20)
+    btn.Position = pos
+    btn.Size = UDim2.new(0, 144, 1, 0)
+    btn.Font = Enum.Font.GothamBold
+    btn.Text = text
+    btn.TextColor3 = textColor
+    btn.TextSize = 12
+    StyleElement(btn, 6)
+end
+SetupTabBtn(ScriptsTabBtn, "📜 Scripts", UDim2.new(0, 0, 0, 0), Color3.fromRGB(255, 255, 255), true)
+SetupTabBtn(TogglesTabBtn, "⚙️ Toggles", UDim2.new(0.333, 0, 0, 0), Color3.fromRGB(150, 150, 150), false)
+SetupTabBtn(PlayerTabBtn, "👤 Target Player", UDim2.new(0.666, 0, 0, 0), Color3.fromRGB(150, 150, 150), false)
 
-TogglesTabBtn.Name = "TogglesTabBtn"
-TogglesTabBtn.Parent = TabBar
-TogglesTabBtn.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
-TogglesTabBtn.Position = UDim2.new(0.33, 0, 0, 0)
-TogglesTabBtn.Size = UDim2.new(0, 140, 1, 0)
-TogglesTabBtn.Font = Enum.Font.SourceSansBold
-TogglesTabBtn.Text = "⚙️ Toggles"
-TogglesTabBtn.TextColor3 = Color3.fromRGB(180, 180, 180)
-TogglesTabBtn.TextSize = 14.000
-
-PlayerTabBtn.Name = "PlayerTabBtn"
-PlayerTabBtn.Parent = TabBar
-PlayerTabBtn.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
-PlayerTabBtn.Position = UDim2.new(0.66, 0, 0, 0)
-PlayerTabBtn.Size = UDim2.new(0, 146, 1, 0)
-PlayerTabBtn.Font = Enum.Font.SourceSansBold
-PlayerTabBtn.Text = "👤 Target Player"
-PlayerTabBtn.TextColor3 = Color3.fromRGB(180, 180, 180)
-PlayerTabBtn.TextSize = 14.000
-
--- Section Containers Creation Function
-local function CreateScrollList(name, visible)
+local function CreateScrollList(name, visible, pos, size, canvas)
     local List = Instance.new("ScrollingFrame")
     List.Name = name
     List.Parent = MainHub
     List.Active = true
-    List.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
-    List.Position = UDim2.new(0.03, 0, 0.23, 0)
-    List.Size = UDim2.new(0, 430, 0, 290)
-    List.ScrollBarThickness = 8
+    List.BackgroundColor3 = Color3.fromRGB(18, 18, 18)
+    List.Position = pos
+    List.Size = size
+    List.ScrollBarThickness = 4
+    List.ScrollBarImageColor3 = Color3.fromRGB(0, 170, 255)
     List.Visible = visible
+    List.CanvasSize = canvas
+    List.BorderSizePixel = 0
+    StyleElement(List, 8)
     return List
 end
 
-ScriptsList = CreateScrollList("ScriptsList", true)
-ScriptsList.CanvasSize = UDim2.new(0, 0, 4.5, 0)
+-- PREMIUM FIXED POSITIONING LAYER
+ScriptsList = CreateScrollList("ScriptsList", true, UDim2.new(0.03, 0, 0.24, 0), UDim2.new(0, 432, 0, 285), UDim2.new(0, 0, 4.5, 0))
+TogglesList = CreateScrollList("TogglesList", false, UDim2.new(0.03, 0, 0.24, 0), UDim2.new(0, 432, 0, 285), UDim2.new(0, 0, 1.8, 0))
 
-TogglesList = CreateScrollList("TogglesList", false)
-TogglesList.CanvasSize = UDim2.new(0, 0, 1.8, 0)
+local PlayerDropdown = CreateScrollList("PlayerDropdown", false, UDim2.new(0.03, 0, 0.24, 0), UDim2.new(0, 432, 0, 105), UDim2.new(0, 0, 4, 0))
+PlayerDropdown.BackgroundColor3 = Color3.fromRGB(10, 10, 10)
+StyleElement(PlayerDropdown, 6, Color3.fromRGB(30, 30, 30))
 
-PlayerList = CreateScrollList("PlayerList", false)
-PlayerList.Position = UDim2.new(0.03, 0, 0.52, 0) 
-PlayerList.Size = UDim2.new(0, 430, 0, 175)
-PlayerList.CanvasSize = UDim2.new(0, 0, 1.5, 0)
+PlayerList = CreateScrollList("PlayerList", false, UDim2.new(0.03, 0, 0.53, 0), UDim2.new(0, 432, 0, 170), UDim2.new(0, 0, 2.2, 0))
 
-UIListLayout1.Parent = ScriptsList; UIListLayout1.SortOrder = Enum.SortOrder.LayoutOrder; UIListLayout1.Padding = UDim.new(0, 6)
-UIListLayout2.Parent = TogglesList; UIListLayout2.SortOrder = Enum.SortOrder.LayoutOrder; UIListLayout2.Padding = UDim.new(0, 6)
-UIListLayout3.Parent = PlayerList; UIListLayout3.SortOrder = Enum.SortOrder.LayoutOrder; UIListLayout3.Padding = UDim.new(0, 6)
+local function ApplyLayout(layout, parent)
+    layout.Parent = parent layout.SortOrder = Enum.SortOrder.LayoutOrder layout.Padding = UDim.new(0, 6)
+end
+ApplyLayout(UIListLayout1, ScriptsList)
+ApplyLayout(UIListLayout2, TogglesList)
+ApplyLayout(UIListLayout3, PlayerList)
+local DropdownLayout = Instance.new("UIListLayout") ApplyLayout(DropdownLayout, PlayerDropdown)
 
--- DYNAMIC LIVE PLAYER DROPDOWN LIST
-local PlayerDropdown = Instance.new("ScrollingFrame")
-PlayerDropdown.Name = "PlayerDropdown"
-PlayerDropdown.Parent = MainHub
-PlayerDropdown.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
-PlayerDropdown.Position = UDim2.new(0.03, 0, 0.23, 0)
-PlayerDropdown.Size = UDim2.new(0, 430, 0, 100)
-PlayerDropdown.CanvasSize = UDim2.new(0, 0, 4, 0)
-PlayerDropdown.ScrollBarThickness = 6
-PlayerDropdown.Visible = false
-
-local DropdownLayout = Instance.new("UIListLayout")
-DropdownLayout.Parent = PlayerDropdown
-DropdownLayout.SortOrder = Enum.SortOrder.LayoutOrder
-DropdownLayout.Padding = UDim.new(0, 4)
-
--- Refresh Player Dropdown List
 local function RefreshPlayerDropdown()
-    for _, child in pairs(PlayerDropdown:GetChildren()) do
-        if child:IsA("TextButton") then child:Destroy() end
-    end
+    for _, child in pairs(PlayerDropdown:GetChildren()) do if child:IsA("TextButton") then child:Destroy() end end
     for _, player in pairs(game.Players:GetPlayers()) do
         if player ~= game.Players.LocalPlayer then
             local PBtn = Instance.new("TextButton")
             PBtn.Parent = PlayerDropdown
-            PBtn.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
-            PBtn.Size = UDim2.new(1, -8, 0, 25)
-            PBtn.Font = Enum.Font.SourceSansBold
-            PBtn.Text = "  " .. player.DisplayName .. " (@" .. player.Name .. ")"
-            PBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
-            PBtn.TextSize = 14.000
+            PBtn.BackgroundColor3 = Color3.fromRGB(24, 24, 24)
+            PBtn.Size = UDim2.new(1, -8, 0, 32)
+            PBtn.Font = Enum.Font.GothamBold
+            PBtn.Text = "   " .. player.DisplayName .. " (@" .. player.Name .. ")"
+            PBtn.TextColor3 = Color3.fromRGB(220, 220, 220)
+            PBtn.TextSize = 11
             PBtn.TextXAlignment = Enum.TextXAlignment.Left
-            
+            StyleElement(PBtn, 4)
             PBtn.MouseButton1Click:Connect(function()
                 TargetPlayerName = player.Name
-                for _, b in pairs(PlayerDropdown:GetChildren()) do
-                    if b:IsA("TextButton") then b.TextColor3 = Color3.fromRGB(255, 255, 255) end
-                end
-                PBtn.TextColor3 = Color3.fromRGB(0, 170, 255)
+                for _, b in pairs(PlayerDropdown:GetChildren()) do if b:IsA("TextButton") then b.TextColor3 = Color3.fromRGB(220, 220, 220) b.BackgroundColor3 = Color3.fromRGB(24,24,24) end end
+                PBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+                PBtn.BackgroundColor3 = Color3.fromRGB(0, 100, 180)
             end)
         end
     end
 end
-
 game.Players.PlayerAdded:Connect(RefreshPlayerDropdown)
 game.Players.PlayerRemoving:Connect(RefreshPlayerDropdown)
 
--- Password Verification Action
 SubmitBtn.MouseButton1Click:Connect(function()
-    if PasswordInput.Text == "ATB" then
-        PasswordFrame.Visible = false
-        MainHub.Visible = true
-    else
-        PasswordInput.Text = ""
-        PasswordInput.PlaceholderText = "Wrong Password! Try Again."
-        PasswordInput.PlaceholderColor3 = Color3.fromRGB(255, 0, 0)
-    end
+    if PasswordInput.Text == "ATB" then PasswordFrame.Visible = false MainHub.Visible = true else PasswordInput.Text = "" PasswordInput.PlaceholderText = "ACCESS DENIED!" PasswordInput.PlaceholderColor3 = Color3.fromRGB(255, 50, 50) end
 end)
-
--- Minimize Button Click Event
-MinimizeBtnHub.MouseButton1Click:Connect(function()
-    MainHub.Visible = false
-    OpenIconBtn.Visible = true
-end)
-
--- Floating Open Button Click Event (Restore Hub)
-OpenIconBtn.MouseButton1Click:Connect(function()
-    OpenIconBtn.Visible = false
-    MainHub.Visible = true
-end)
-
--- Close Button Click -> Deletes EVERYTHING
+MinimizeBtnHub.MouseButton1Click:Connect(function() MainHub.Visible = false OpenIconBtn.Visible = true end)
+OpenIconBtn.MouseButton1Click:Connect(function() OpenIconBtn.Visible = false MainHub.Visible = true end)
 CloseBtnHub.MouseButton1Click:Connect(function()
-    if BangLoop then BangLoop:Disconnect() end
-    if HeadSitLoop then HeadSitLoop:Disconnect() end
+    if BangLoop then BangLoop:Disconnect() end if HeadSitLoop then HeadSitLoop:Disconnect() end
+    Toggles.ESP = false task.wait(0.1)
+for _, p in pairs(game.Players:GetPlayers()) do if p.Character and p.Character:FindFirstChild("HubESP") then p.Character.HubESP:Destroy() end end
 ScreenGui:Destroy()
 end)
--- Tab Navigation Swapper System
 local function SwitchTab(activeList, activeBtn, inactiveBtn1, inactiveBtn2)
-ScriptsList.Visible = (ScriptsList == activeList)
-TogglesList.Visible = (TogglesList == activeList)
-PlayerList.Visible = (PlayerList == activeList)
-PlayerDropdown.Visible = (PlayerList == activeList)
+ScriptsList.Visible = (ScriptsList == activeList) TogglesList.Visible = (TogglesList == activeList) PlayerList.Visible = (PlayerList == activeList) PlayerDropdown.Visible = (PlayerList == activeList)
 if PlayerList == activeList then RefreshPlayerDropdown() end
-activeBtn.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
-activeBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
-inactiveBtn1.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
-inactiveBtn1.TextColor3 = Color3.fromRGB(180, 180, 180)
-inactiveBtn2.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
-inactiveBtn2.TextColor3 = Color3.fromRGB(180, 180, 180)
+activeBtn.BackgroundColor3, activeBtn.TextColor3 = Color3.fromRGB(30, 30, 30), Color3.fromRGB(255, 255, 255)
+inactiveBtn1.BackgroundColor3, inactiveBtn1.TextColor3 = Color3.fromRGB(20, 20, 20), Color3.fromRGB(140, 140, 140)
+inactiveBtn2.BackgroundColor3, inactiveBtn2.TextColor3 = Color3.fromRGB(20, 20, 20), Color3.fromRGB(140, 140, 140)
 end
 ScriptsTabBtn.MouseButton1Click:Connect(function() SwitchTab(ScriptsList, ScriptsTabBtn, TogglesTabBtn, PlayerTabBtn) end)
 TogglesTabBtn.MouseButton1Click:Connect(function() SwitchTab(TogglesList, TogglesTabBtn, ScriptsTabBtn, PlayerTabBtn) end)
 PlayerTabBtn.MouseButton1Click:Connect(function() SwitchTab(PlayerList, PlayerTabBtn, ScriptsTabBtn, TogglesTabBtn) end)
--- Core Generators for Buttons and Toggles
 local function CreateButton(parentList, name, callback)
 local Btn = Instance.new("TextButton")
-Btn.Parent = parentList
-Btn.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
-Btn.Size = UDim2.new(1, -10, 0, 40)
-Btn.Font = Enum.Font.SourceSansBold
-Btn.Text = name
-Btn.TextColor3 = Color3.fromRGB(255, 255, 255)
-Btn.TextSize = 16.000
-Btn.MouseButton1Click:Connect(callback)
-return Btn
+Btn.Parent = parentList Btn.BackgroundColor3 = Color3.fromRGB(28, 28, 28) Btn.Size = UDim2.new(1, -10, 0, 38) Btn.Font = Enum.Font.GothamBold Btn.Text = name Btn.TextColor3 = Color3.fromRGB(240, 240, 240) Btn.TextSize = 12
+StyleElement(Btn, 6, Color3.fromRGB(38, 38, 38))
+Btn.MouseButton1Click:Connect(callback) return Btn
 end
 local function CreateToggle(parentList, name, callback)
-local ToggleBtn = Instance.new("TextButton")
-local enabled = false
-ToggleBtn.Parent = parentList
-ToggleBtn.BackgroundColor3 = Color3.fromRGB(60, 30, 30)
-ToggleBtn.Size = UDim2.new(1, -10, 0, 40)
-ToggleBtn.Font = Enum.Font.SourceSansBold
-ToggleBtn.Text = name .. " : OFF"
-ToggleBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
-ToggleBtn.TextSize = 16.000
-ToggleBtn.MouseButton1Click:Connect(function()
-enabled = not enabled
-ToggleBtn.BackgroundColor3 = enabled and Color3.fromRGB(30, 100, 30) or Color3.fromRGB(60, 30, 30)
-ToggleBtn.Text = name .. (enabled and " : ON" or " : OFF")
-callback(enabled)
-end)
+local ToggleBtn = Instance.new("TextButton") local enabled = false
+ToggleBtn.Parent = parentList ToggleBtn.BackgroundColor3 = Color3.fromRGB(45, 25, 25) ToggleBtn.Size = UDim2.new(1, -10, 0, 38) ToggleBtn.Font = Enum.Font.GothamBold ToggleBtn.Text = name .. " : OFF" ToggleBtn.TextColor3 = Color3.fromRGB(240, 240, 240) ToggleBtn.TextSize = 12
+StyleElement(ToggleBtn, 6)
+ToggleBtn.MouseButton1Click:Connect(function() enabled = not enabled ToggleBtn.BackgroundColor3 = enabled and Color3.fromRGB(25, 45, 25) or Color3.fromRGB(45, 25, 25) ToggleBtn.Text = name .. (enabled and " : ON" or " : OFF") callback(enabled) end)
 return ToggleBtn
 end
--- Fixed Built-in Custom Target Loop Engine
 local function RunAnimationLoop(offsetCFrame)
 if BangLoop then BangLoop:Disconnect() end
-local p1 = game.Players.LocalPlayer.Character
-local p2 = game.Workspace:FindFirstChild(TargetPlayerName)
+local p1, p2 = game.Players.LocalPlayer.Character, game.Workspace:FindFirstChild(TargetPlayerName)
 if p1 and p2 and p1:FindFirstChild("HumanoidRootPart") and p2:FindFirstChild("HumanoidRootPart") then
-local myHRP = p1.HumanoidRootPart
-local targetHRP = p2.HumanoidRootPart
-local moveIn = true
-local speed = 0.4
+local myHRP, targetHRP, moveIn = p1.HumanoidRootPart, p2.HumanoidRootPart, true
 BangLoop = game:GetService("RunService").Heartbeat:Connect(function()
 if p1 and p2 and p1:FindFirstChild("HumanoidRootPart") and p2:FindFirstChild("HumanoidRootPart") then
-local targetPos = targetHRP.CFrame * offsetCFrame
-if moveIn then
-myHRP.CFrame = targetPos * CFrame.new(0, 0, speed)
-else
-myHRP.CFrame = targetPos * CFrame.new(0, 0, -speed)
-end
-moveIn = not moveIn
-else
-if BangLoop then BangLoop:Disconnect() end
-end
+myHRP.CFrame = targetHRP.CFrame * offsetCFrame * CFrame.new(0, 0, moveIn and 0.4 or -0.4) moveIn = not moveIn
+else if BangLoop then BangLoop:Disconnect() end end
 end)
 end
 end
 
 -- ==========================================
--- TAB 1: MAIN SCRIPTS SECTION (BUTTONS)
+-- BUTTONS & TOGGLES GENERATION
 -- ==========================================
-CreateButton(ScriptsList, "SKY GLITCHER (FE)", function() loadstring(game:HttpGet("rawscripts.net"))() end)
-CreateButton(ScriptsList, "EMOTE", function() loadstring(game:HttpGet("githubusercontent.com"))() end)
-CreateButton(ScriptsList, "SERVER HOP", function() loadstring(game:HttpGet("pastebin.com"))() end)
-for i = 1, 10 do
-CreateButton(ScriptsList, "Soon...", function() loadstring(game:HttpGet("pastebin.com_" .. i))() end)
-end
--- ==========================================
--- TAB 2: TOGGLES SECTION (ON/OFF)
--- ==========================================
-CreateToggle(TogglesList, "ADVANCE NOCLIP", function(value)
-Toggles.Noclip = value
-end)
+CreateButton(ScriptsList, "SKY GLITCHER (FE)", function() loadstring(game:HttpGet("https://rawscripts.net"))() end)
+CreateButton(ScriptsList, "EMOTE", function() loadstring(game:HttpGet("https://githubusercontent.com"))() end)
+CreateButton(ScriptsList, "SERVER HOP", function() loadstring(game:HttpGet("https://pastebin.com"))() end)
+CreateToggle(TogglesList, "ADVANCE NOCLIP", function(v) Toggles.Noclip = v end)
 game:GetService("RunService").Stepped:Connect(function()
 if Toggles.Noclip and game.Players.LocalPlayer.Character then
-for _, part in pairs(game.Players.LocalPlayer.Character:GetDescendants()) do
-if part:IsA("BasePart") then part.CanCollide = false end
-end
+for _, part in pairs(game.Players.LocalPlayer.Character:GetDescendants()) do if part:IsA("BasePart") then part.CanCollide = false end end
 end
 end)
-CreateToggle(TogglesList, "ESP (ALL PLAYERS)", function(value)
-Toggles.ESP = value
-if not value then
-for _, p in pairs(game.Players:GetPlayers()) do
-if p.Character and p.Character:FindFirstChild("HubESP") then p.Character.HubESP:Destroy() end
-end
-end
+CreateToggle(TogglesList, "ESP (ALL PLAYERS)", function(v)
+Toggles.ESP = v if not v then for _, p in pairs(game.Players:GetPlayers()) do if p.Character and p.Character:FindFirstChild("HubESP") then p.Character.HubESP:Destroy() end end end
 end)
+task.spawn(function()
+while task.wait(0.5) do if Toggles.ESP then for _, p in pairs(game.Players:GetPlayers()) do if p ~= game.Players.LocalPlayer and p.Character and p.Character:FindFirstChild("HumanoidRootPart") and not p.Character:FindFirstChild("HubESP") then local Box = Instance.new("Highlight") Box.Name = "HubESP" Box.Parent = p.Character Box.FillColor, Box.OutlineColor = Color3.fromRGB(0, 170, 255), Color3.fromRGB(255, 255, 255) end end end end
+end)
+CreateToggle(TogglesList, "WALKFLING", function(v) Toggles.WalkFling = v end)
 game:GetService("RunService").Heartbeat:Connect(function()
-if Toggles.ESP then
-for _, player in pairs(game.Players:GetPlayers()) do
-if player ~= game.Players.LocalPlayer and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
-if not player.Character:FindFirstChild("HubESP") then
-local Box = Instance.new("Highlight")
-Box.Name = "HubESP"
-Box.Parent = player.Character
-Box.FillColor = Color3.fromRGB(0, 170, 255)
-Box.OutlineColor = Color3.fromRGB(255, 255, 255)
-end
-end
-end
-end
+local p1 = game.Players.LocalPlayer.Character if Toggles.WalkFling and p1 and p1:FindFirstChild("HumanoidRootPart") then p1.HumanoidRootPart.Velocity, p1.HumanoidRootPart.RotVelocity = Vector3.new(0, 0, 0), Vector3.new(0, 25000, 0) end
 end)
-CreateToggle(TogglesList, "Toggle Soon 1", function(value) Toggles.Custom1 = value end)
-CreateToggle(TogglesList, "Toggle Soon 2", function(value) Toggles.Custom2 = value end)
--- ==========================================
--- TAB 3: PLAYER TARGET SECTION
--- ==========================================
-CreateButton(PlayerList, "BANG", function()
-if TargetPlayerName ~= "" then RunAnimationLoop(CFrame.new(0, 0, 1.2)) end
+CreateToggle(TogglesList, "ANTIFLING", function(v) Toggles.AntiFling = v end)
+game:GetService("RunService").Heartbeat:Connect(function()
+local p1 = game.Players.LocalPlayer.Character if Toggles.AntiFling and p1 and p1:FindFirstChild("HumanoidRootPart") then for _, part in pairs(p1:GetDescendants()) do if part:IsA("BasePart") then part.Velocity, part.RotVelocity = Vector3.new(0, 0, 0), Vector3.new(0, 0, 0) end end end
 end)
-CreateButton(PlayerList, "MOUTH BANG", function()
-if TargetPlayerName ~= "" then RunAnimationLoop(CFrame.new(0, -0.6, -1.2) * CFrame.Angles(0, math.rad(180), 0)) end
-end)
+CreateButton(PlayerList, "BANG", function() if TargetPlayerName ~= "" then RunAnimationLoop(CFrame.new(0, 0, 1.2)) end end)
+CreateButton(PlayerList, "MOUTH BANG", function() if TargetPlayerName ~= "" then RunAnimationLoop(CFrame.new(0, -0.6, -1.2) * CFrame.Angles(0, math.rad(180), 0)) end end)
 CreateButton(PlayerList, "PLAYER BACKSIT", function()
-if TargetPlayerName ~= "" then
-local targetPlayer = game.Players:FindFirstChild(TargetPlayerName)
-if targetPlayer and targetPlayer.Character and targetPlayer.Character:FindFirstChild("HumanoidRootPart") then
-game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = targetPlayer.Character.HumanoidRootPart.CFrame * CFrame.new(0, 1.5, 0.2)
-end
-end
+local tp = game.Players:FindFirstChild(TargetPlayerName) if TargetPlayerName ~= "" and tp and tp.Character and tp.Character:FindFirstChild("HumanoidRootPart") then game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = tp.Character.HumanoidRootPart.CFrame * CFrame.new(0, 1.5, 0.2) end
 end)
 CreateButton(PlayerList, "PLAYER HEADSIT", function()
 if HeadSitLoop then HeadSitLoop:Disconnect() end
-if TargetPlayerName ~= "" then
-local p1 = game.Players.LocalPlayer.Character
-local p2 = game.Workspace:FindFirstChild(TargetPlayerName)
-if p1 and p2 and p1:FindFirstChild("HumanoidRootPart") and p2:FindFirstChild("Head") then
-HeadSitLoop = game:GetService("RunService").Heartbeat:Connect(function()
-if p1 and p2 and p2:FindFirstChild("Head") and p1:FindFirstChild("HumanoidRootPart") then
-p1.HumanoidRootPart.CFrame = p2.Head.CFrame * CFrame.new(0, 1.3, 0)
-else
-if HeadSitLoop then HeadSitLoop:Disconnect() end
+local p1, p2 = game.Players.LocalPlayer.Character, game.Workspace:FindFirstChild(TargetPlayerName)
+if TargetPlayerName ~= "" and p1 and p2 and p1:FindFirstChild("HumanoidRootPart") and p2:FindFirstChild("Head") then
+HeadSitLoop = game:GetService("RunService").Heartbeat:Connect(function() if p1 and p2 and p2:FindFirstChild("Head") and p1:FindFirstChild("HumanoidRootPart") then p1.HumanoidRootPart.CFrame = p2.Head.CFrame * CFrame.new(0, 1.3, 0) else if HeadSitLoop then HeadSitLoop:Disconnect() end end end)
 end
 end)
-end
-end
-end)
-CreateButton(PlayerList, "❌ STOP ANIMATION", function()
-if BangLoop then BangLoop:Disconnect(); BangLoop = nil end
-if HeadSitLoop then HeadSitLoop:Disconnect(); HeadSitLoop = nil end
-end)
-
--- ==========================================
--- TAB 1: MAIN SCRIPTS SECTION (BUTTONS)
--- ==========================================
-CreateButton(ScriptsList, "SKY GLITCHER (FE)", function() loadstring(game:HttpGet("rawscripts.net"))() end)
-CreateButton(ScriptsList, "EMOTE", function() loadstring(game:HttpGet("githubusercontent.com"))() end)
-CreateButton(ScriptsList, "SERVER HOP", function() loadstring(game:HttpGet("pastebin.com"))() end)
-for i = 1, 10 do
-CreateButton(ScriptsList, "Soon...", function() loadstring(game:HttpGet("pastebin.com_" .. i))() end)
-end
--- ==========================================
--- TAB 2: TOGGLES SECTION (ON/OFF)
--- ==========================================
-CreateToggle(TogglesList, "ADVANCE NOCLIP", function(value) Toggles.Noclip = value end)
-game:GetService("RunService").Stepped:Connect(function()
-if Toggles.Noclip and game.Players.LocalPlayer.Character then
-for _, part in pairs(game.Players.LocalPlayer.Character:GetDescendants()) do
-if part:IsA("BasePart") then part.CanCollide = false end
-end
-end
-end)
-CreateToggle(TogglesList, "ESP (ALL PLAYERS)", function(value)
-Toggles.ESP = value
-if not value then
-for _, p in pairs(game.Players:GetPlayers()) do
-if p.Character and p.Character:FindFirstChild("HubESP") then p.Character.HubESP:Destroy() end
-end
-end
-end)
-game:GetService("RunService").Heartbeat:Connect(function()
-if Toggles.ESP then
-for _, player in pairs(game.Players:GetPlayers()) do
-if player ~= game.Players.LocalPlayer and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
-if not player.Character:FindFirstChild("HubESP") then
-local Box = Instance.new("Highlight")
-Box.Name = "HubESP"
-Box.Parent = player.Character
-Box.FillColor = Color3.fromRGB(0, 170, 255)
-Box.OutlineColor = Color3.fromRGB(255, 255, 255)
-end
-end
-end
-end
-end)
--- 3. WALKFLING TOGGLE (NEW ENGINE WORKING natively)
-CreateToggle(TogglesList, "WALKFLING", function(value)
-Toggles.WalkFling = value
-end)
-game:GetService("RunService").Heartbeat:Connect(function()
-if Toggles.WalkFling then
-local p1 = game.Players.LocalPlayer.Character
-if p1 and p1:FindFirstChild("HumanoidRootPart") then
-local hrp = p1.HumanoidRootPart
--- High angular velocity bypass simulation loop
-hrp.Velocity = Vector3.new(0, 0, 0)
-hrp.RotVelocity = Vector3.new(0, 25000, 0)
-end
-end
-end)
--- 4. ANTIFLING TOGGLE (STABILIZES HRP FOR SAFETY)
-CreateToggle(TogglesList, "ANTIFLING", function(value)
-Toggles.AntiFling = value
-end)
-game:GetService("RunService").Heartbeat:Connect(function()
-if Toggles.AntiFling then
-local p1 = game.Players.LocalPlayer.Character
-if p1 and p1:FindFirstChild("HumanoidRootPart") then
-for _, part in pairs(p1:GetDescendants()) do
-if part:IsA("BasePart") then
-part.Velocity = Vector3.new(0, 0, 0)
-part.RotVelocity = Vector3.new(0, 0, 0)
-end
-end
-end
-end
-end)
-
-CreateToggle(TogglesList, "Toggle Soon 1", function(value) Toggles.Custom1 = value end)
-CreateToggle(TogglesList, "Toggle Soon 2", function(value) Toggles.Custom2 = value end)
--- ==========================================
--- TAB 3: PLAYER TARGET SECTION
--- ==========================================
-CreateButton(PlayerList, "BANG", function()
-if TargetPlayerName ~= "" then RunAnimationLoop(CFrame.new(0, 0, 1.2)) end
-end)
-CreateButton(PlayerList, "MOUTH BANG", function()
-if TargetPlayerName ~= "" then RunAnimationLoop(CFrame.new(0, -0.6, -1.2) * CFrame.Angles(0, math.rad(180), 0)) end
-end)
-CreateButton(PlayerList, "PLAYER BACKSIT", function()
-if TargetPlayerName ~= "" then
-local targetPlayer = game.Players:FindFirstChild(TargetPlayerName)
-if targetPlayer and targetPlayer.Character and targetPlayer.Character:FindFirstChild("HumanoidRootPart") then
-game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = targetPlayer.Character.HumanoidRootPart.CFrame * CFrame.new(0, 1.5, 0.2)
-end
-end
-end)
-CreateButton(PlayerList, "PLAYER HEADSIT", function()
-if HeadSitLoop then HeadSitLoop:Disconnect() end
-if TargetPlayerName ~= "" then
-local p1 = game.Players.LocalPlayer.Character
-local p2 = game.Workspace:FindFirstChild(TargetPlayerName)
-if p1 and p2 and p1:FindFirstChild("HumanoidRootPart") and p2:FindFirstChild("Head") then
-HeadSitLoop = game:GetService("RunService").Heartbeat:Connect(function()
-if p1 and p2 and p2:FindFirstChild("Head") and p1:FindFirstChild("HumanoidRootPart") then
-p1.HumanoidRootPart.CFrame = p2.Head.CFrame * CFrame.new(0, 1.3, 0)
-else
-if HeadSitLoop then HeadSitLoop:Disconnect() end
-end
-end)
-end
-end
-end)
-CreateButton(PlayerList, "❌ STOP ANIMATION", function()
-if BangLoop then BangLoop:Disconnect(); BangLoop = nil end
-if HeadSitLoop then HeadSitLoop:Disconnect(); HeadSitLoop = nil end
-end)
+CreateButton(PlayerList, "❌ STOP ANIMATION", function() if BangLoop then BangLoop:Disconnect() BangLoop = nil end if HeadSitLoop then HeadSitLoop:Disconnect() HeadSitLoop = nil end end)
