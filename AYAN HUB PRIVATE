@@ -1,5 +1,5 @@
 -- ==========================================================
--- AYAN HUB v1 (SEARCH BAR & ADVANCED CUSTOM TAB 2 UPDATE)
+-- AYAN HUB v1 (TAB 4 SPAMMER & MOBILE FLY + FLING FIX)
 -- Password is: ATB
 -- ==========================================================
 local ScreenGui = Instance.new("ScreenGui")
@@ -13,23 +13,23 @@ local MinimizeBtnHub = Instance.new("TextButton")
 local OpenIconBtn = Instance.new("TextButton") 
 
 local TabBar = Instance.new("Frame")
-local ScriptsTabBtn, TogglesTabBtn, PlayerTabBtn = Instance.new("TextButton"), Instance.new("TextButton"), Instance.new("TextButton")
+local ScriptsTabBtn, TogglesTabBtn, PlayerTabBtn, SpammerTabBtn = Instance.new("TextButton"), Instance.new("TextButton"), Instance.new("TextButton"), Instance.new("TextButton")
 
-local ScriptsList, TogglesList, PlayerList = Instance.new("ScrollingFrame"), Instance.new("ScrollingFrame"), Instance.new("ScrollingFrame")
-local UIListLayout1, UIListLayout2, UIListLayout3 = Instance.new("UIListLayout"), Instance.new("UIListLayout"), Instance.new("UIListLayout")
+local ScriptsList, TogglesList, PlayerList, SpammerList = Instance.new("ScrollingFrame"), Instance.new("ScrollingFrame"), Instance.new("ScrollingFrame"), Instance.new("ScrollingFrame")
+local UIListLayout1, UIListLayout2, UIListLayout3, UIListLayout4 = Instance.new("UIListLayout"), Instance.new("UIListLayout"), Instance.new("UIListLayout"), Instance.new("UIListLayout")
 
-local Toggles = { Noclip = false, ESP = false, WalkFling = false, AntiFling = false, Fly = false, InfJump = false, Spin = false }
-local TargetPlayerName, BangLoop, HeadSitLoop = "", nil, nil
+local Toggles = { Noclip = false, ESP = false, WalkFling = false, AntiFling = false, Fly = false, InfJump = false, Spin = false, Invisible = false, Spammer = false }
+local TargetPlayerName, BangLoop, HeadSitLoop, SpamLoop = "", nil, nil, nil
 
 -- State variables for Custom Sliders/Inputs
 local CustomWalkSpeed, CustomJumpPower, CustomSpinSpeed = 16, 50, 50
-local SpinObj = nil
+local SpinObj, InvisibleClone, SpamText, SpamDelay = nil, nil, "AYAN HUB ON TOP!", 1.5
 
 -- UI State Elements
 local TargetPanelMinimized = false
 local MinimizePlayerListBtn = Instance.new("TextButton")
 local TargetNameLabel = Instance.new("TextLabel")
-local PlayerSearchBar = Instance.new("TextBox") -- NEW: Real-time Search Engine
+local PlayerSearchBar = Instance.new("TextBox")
 
 ScreenGui.Parent = game.CoreGui
 ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
@@ -143,24 +143,25 @@ StyleElement(OpenIconBtn, 6, Color3.fromRGB(0, 170, 255))
 TabBar.Name = "TabBar"
 TabBar.Parent = MainHub
 TabBar.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
-TabBar.Position = UDim2.new(0.03, 0, 0.13, 0)
-TabBar.Size = UDim2.new(0, 432, 0, 36)
+TabBar.Position = UDim2.new(0.02, 0, 0.13, 0)
+TabBar.Size = UDim2.new(0, 442, 0, 36)
 StyleElement(TabBar, 6)
 
-local function SetupTabBtn(btn, text, pos, textColor, active)
+local function SetupTabBtn(btn, text, pos, textColor, active, width)
     btn.Parent = TabBar
     btn.BackgroundColor3 = active and Color3.fromRGB(30, 30, 30) or Color3.fromRGB(20, 20, 20)
     btn.Position = pos
-    btn.Size = UDim2.new(0, 144, 1, 0)
+    btn.Size = UDim2.new(0, width, 1, 0)
     btn.Font = Enum.Font.GothamBold
     btn.Text = text
     btn.TextColor3 = textColor
-    btn.TextSize = 12
+    btn.TextSize = 10
     StyleElement(btn, 6)
 end
-SetupTabBtn(ScriptsTabBtn, "📜 Scripts", UDim2.new(0, 0, 0, 0), Color3.fromRGB(255, 255, 255), true)
-SetupTabBtn(TogglesTabBtn, "⚙️ Toggles", UDim2.new(0.333, 0, 0, 0), Color3.fromRGB(150, 150, 150), false)
-SetupTabBtn(PlayerTabBtn, "👤 Target Player", UDim2.new(0.666, 0, 0, 0), Color3.fromRGB(150, 150, 150), false)
+SetupTabBtn(ScriptsTabBtn, "📜 Scripts", UDim2.new(0, 0, 0, 0), Color3.fromRGB(255, 255, 255), true, 105)
+SetupTabBtn(TogglesTabBtn, "⚙️ Toggles", UDim2.new(0.24, 0, 0, 0), Color3.fromRGB(150, 150, 150), false, 105)
+SetupTabBtn(PlayerTabBtn, "👤 Target", UDim2.new(0.48, 0, 0, 0), Color3.fromRGB(150, 150, 150), false, 110)
+SetupTabBtn(SpammerTabBtn, "💬 Spammer", UDim2.new(0.73, 0, 0, 0), Color3.fromRGB(150, 150, 150), false, 115)
 
 local function CreateScrollList(name, visible, pos, size, canvas)
     local List = Instance.new("ScrollingFrame")
@@ -181,8 +182,8 @@ end
 
 ScriptsList = CreateScrollList("ScriptsList", true, UDim2.new(0.03, 0, 0.24, 0), UDim2.new(0, 432, 0, 285), UDim2.new(0, 0, 4.5, 0))
 TogglesList = CreateScrollList("TogglesList", false, UDim2.new(0.03, 0, 0.24, 0), UDim2.new(0, 432, 0, 285), UDim2.new(0, 0, 4.5, 0))
+SpammerList = CreateScrollList("SpammerList", false, UDim2.new(0.03, 0, 0.24, 0), UDim2.new(0, 432, 0, 285), UDim2.new(0, 0, 1.5, 0))
 
--- NEW: Tab 3 Real-time Player Search Bar Layout
 PlayerSearchBar.Name = "PlayerSearchBar"
 PlayerSearchBar.Parent = MainHub
 PlayerSearchBar.BackgroundColor3 = Color3.fromRGB(26, 26, 26)
@@ -232,14 +233,13 @@ end
 ApplyLayout(UIListLayout1, ScriptsList)
 ApplyLayout(UIListLayout2, TogglesList)
 ApplyLayout(UIListLayout3, PlayerList)
+ApplyLayout(UIListLayout4, SpammerList)
 local DropdownLayout = Instance.new("UIListLayout") ApplyLayout(DropdownLayout, PlayerDropdown)
-
--- Tab 3 Minimize Logic Fixes
 MinimizePlayerListBtn.MouseButton1Click:Connect(function()
-    TargetPanelMinimized = not TargetPanelMinimized
-    if TargetPanelMinimized then
-        MinimizePlayerListBtn.Text = "v"
-        PlayerList.Visible = false
+TargetPanelMinimized = not TargetPanelMinimized
+if TargetPanelMinimized then
+MinimizePlayerListBtn.Text = "v"
+PlayerList.Visible = false
 PlayerDropdown.Size = UDim2.new(0, 432, 0, 220)
 else
 MinimizePlayerListBtn.Text = "^"
@@ -247,7 +247,6 @@ PlayerList.Visible = true
 PlayerDropdown.Size = UDim2.new(0, 432, 0, 80)
 end
 end)
--- NEW: Core Filter Logic for Live Dropdown Search Engine
 local function RefreshPlayerDropdown()
 for _, child in pairs(PlayerDropdown:GetChildren()) do if child:IsA("TextButton") then child:Destroy() end end
 local filterText = string.lower(PlayerSearchBar.Text)
@@ -277,6 +276,7 @@ end
 end
 end
 end
+
 PlayerSearchBar.Changed:Connect(function(prop)
 if prop == "Text" then RefreshPlayerDropdown() end
 end)
@@ -288,14 +288,17 @@ end)
 MinimizeBtnHub.MouseButton1Click:Connect(function() MainHub.Visible = false OpenIconBtn.Visible = true end)
 OpenIconBtn.MouseButton1Click:Connect(function() OpenIconBtn.Visible = false MainHub.Visible = true end)
 CloseBtnHub.MouseButton1Click:Connect(function()
-if BangLoop then BangLoop:Disconnect() end if HeadSitLoop then HeadSitLoop:Disconnect() end
-Toggles.ESP = false Toggles.Spin = false Toggles.Fly = false Toggles.InfJump = false task.wait(0.1)
+if BangLoop then BangLoop:Disconnect() end if HeadSitLoop then HeadSitLoop:Disconnect() end if SpamLoop then SpamLoop:Disconnect() end
+Toggles.ESP = false Toggles.Spin = false Toggles.Fly = false Toggles.InfJump = false Toggles.WalkFling = false Toggles.Invisible = false task.wait(0.1)
 if SpinObj then SpinObj:Destroy() end
+if InvisibleClone then InvisibleClone:Destroy() end
 for _, p in pairs(game.Players:GetPlayers()) do if p.Character and p.Character:FindFirstChild("HubESP") then p.Character.HubESP:Destroy() end end
 ScreenGui:Destroy()
 end)
-local function SwitchTab(activeList, activeBtn, inactiveBtn1, inactiveBtn2)
-ScriptsList.Visible = (ScriptsList == activeList) TogglesList.Visible = (TogglesList == activeList)
+local function SwitchTab(activeList, activeBtn, inactiveBtn1, inactiveBtn2, inactiveBtn3)
+ScriptsList.Visible = (ScriptsList == activeList)
+TogglesList.Visible = (TogglesList == activeList)
+SpammerList.Visible = (SpammerList == activeList)
 local isPlayerTab = (PlayerList == activeList)
 PlayerSearchBar.Visible = isPlayerTab
 PlayerDropdown.Visible = isPlayerTab
@@ -310,10 +313,12 @@ end
 activeBtn.BackgroundColor3, activeBtn.TextColor3 = Color3.fromRGB(30, 30, 30), Color3.fromRGB(255, 255, 255)
 inactiveBtn1.BackgroundColor3, inactiveBtn1.TextColor3 = Color3.fromRGB(20, 20, 20), Color3.fromRGB(140, 140, 140)
 inactiveBtn2.BackgroundColor3, inactiveBtn2.TextColor3 = Color3.fromRGB(20, 20, 20), Color3.fromRGB(140, 140, 140)
+inactiveBtn3.BackgroundColor3, inactiveBtn3.TextColor3 = Color3.fromRGB(20, 20, 20), Color3.fromRGB(140, 140, 140)
 end
-ScriptsTabBtn.MouseButton1Click:Connect(function() SwitchTab(ScriptsList, ScriptsTabBtn, TogglesTabBtn, PlayerTabBtn) end)
-TogglesTabBtn.MouseButton1Click:Connect(function() SwitchTab(TogglesList, TogglesTabBtn, ScriptsTabBtn, PlayerTabBtn) end)
-PlayerTabBtn.MouseButton1Click:Connect(function() SwitchTab(PlayerList, PlayerTabBtn, ScriptsTabBtn, TogglesTabBtn) end)
+ScriptsTabBtn.MouseButton1Click:Connect(function() SwitchTab(ScriptsList, ScriptsTabBtn, TogglesTabBtn, PlayerTabBtn, SpammerTabBtn) end)
+TogglesTabBtn.MouseButton1Click:Connect(function() SwitchTab(TogglesList, TogglesTabBtn, ScriptsTabBtn, PlayerTabBtn, SpammerTabBtn) end)
+PlayerTabBtn.MouseButton1Click:Connect(function() SwitchTab(PlayerList, PlayerTabBtn, ScriptsTabBtn, TogglesTabBtn, SpammerTabBtn) end)
+SpammerTabBtn.MouseButton1Click:Connect(function() SwitchTab(SpammerList, SpammerTabBtn, ScriptsTabBtn, TogglesTabBtn, PlayerTabBtn) end)
 local function CreateButton(parentList, name, callback)
 local Btn = Instance.new("TextButton")
 Btn.Parent = parentList Btn.BackgroundColor3 = Color3.fromRGB(28, 28, 28) Btn.Size = UDim2.new(1, -10, 0, 38) Btn.Font = Enum.Font.GothamBold Btn.Text = name Btn.TextColor3 = Color3.fromRGB(240, 240, 240) Btn.TextSize = 12
@@ -328,7 +333,6 @@ StyleElement(ToggleBtn, 6)
 ToggleBtn.MouseButton1Click:Connect(function() enabled = not enabled ToggleBtn.BackgroundColor3 = enabled and Color3.fromRGB(25, 45, 25) or Color3.fromRGB(45, 25, 25) ToggleBtn.Text = name .. (enabled and " : ON" or " : OFF") callback(enabled) end)
 return ToggleBtn
 end
--- NEW: Core Custom UI Block Engine Component For Sliders/Val Inputs Alongside Toggles
 local function CreateCustomValueSlider(parentList, labelName, defaultVal, callback)
 local Container = Instance.new("Frame")
 Container.Parent = parentList Container.BackgroundColor3 = Color3.fromRGB(22, 22, 22) Container.Size = UDim2.new(1, -10, 0, 42) StyleElement(Container, 6, Color3.fromRGB(35, 35, 35))
@@ -340,6 +344,7 @@ ValueInput.FocusLost:Connect(function()
 local num = tonumber(ValueInput.Text)
 if num then callback(num) else ValueInput.Text = tostring(defaultVal) end
 end)
+return ValueInput
 end
 local function RunAnimationLoop(offsetCFrame)
 if BangLoop then BangLoop:Disconnect() end
@@ -364,7 +369,7 @@ CreateButton(ScriptsList, "SKY GLITCHER (FE)", function() loadstring(game:HttpGe
 CreateButton(ScriptsList, "EMOTE", function() loadstring(game:HttpGet("https://githubusercontent.com"))() end)
 CreateButton(ScriptsList, "SERVER HOP", function() loadstring(game:HttpGet("https://pastebin.com"))() end)
 -- ==========================================
--- TAB 2 ADVANCED UTILITY ENGINE (NEW REQS FIXED)
+-- TAB 2 UTILITY (UPGRADED MOBILE ENGINE)
 -- ==========================================
 CreateToggle(TogglesList, "ADVANCE NOCLIP", function(v) Toggles.Noclip = v end)
 game:GetService("RunService").Stepped:Connect(function()
@@ -378,65 +383,80 @@ end)
 task.spawn(function()
 while task.wait(0.5) do if Toggles.ESP then for _, p in pairs(game.Players:GetPlayers()) do if p ~= game.Players.LocalPlayer and p.Character and p.Character:FindFirstChild("HumanoidRootPart") and not p.Character:FindFirstChild("HubESP") then local Box = Instance.new("Highlight") Box.Name = "HubESP" Box.Parent = p.Character Box.FillColor, Box.OutlineColor = Color3.fromRGB(0, 170, 255), Color3.fromRGB(255, 255, 255) end end end end
 end)
+-- FIXED WALKFLING: High anti-torque balance field. No self-fling, only targets fling.
 CreateToggle(TogglesList, "WALKFLING", function(v) Toggles.WalkFling = v end)
 game:GetService("RunService").Heartbeat:Connect(function()
-local p1 = game.Players.LocalPlayer.Character if Toggles.WalkFling and p1 and p1:FindFirstChild("HumanoidRootPart") then p1.HumanoidRootPart.Velocity, p1.HumanoidRootPart.RotVelocity = Vector3.new(0, 0, 0), Vector3.new(0, 25000, 0) end
+local char = game.Players.LocalPlayer.Character
+if Toggles.WalkFling and char and char:FindFirstChild("HumanoidRootPart") then
+for _, part in pairs(char:GetDescendants()) do
+if part:IsA("BasePart") then part.CanCollide = false end
+end
+char.HumanoidRootPart.Velocity = Vector3.new(0, 0, 0)
+char.HumanoidRootPart.RotVelocity = Vector3.new(0, 35000, 0) -- High spin velocity engine bypass
+end
 end)
 CreateToggle(TogglesList, "ANTIFLING", function(v) Toggles.AntiFling = v end)
 game:GetService("RunService").Heartbeat:Connect(function()
 local p1 = game.Players.LocalPlayer.Character if Toggles.AntiFling and p1 and p1:FindFirstChild("HumanoidRootPart") then for _, part in pairs(p1:GetDescendants()) do if part:IsA("BasePart") then part.Velocity, part.RotVelocity = Vector3.new(0, 0, 0), Vector3.new(0, 0, 0) end end end
 end)
--- NEW: Stable Loop Engine Component For Fly Tool
+-- MOBILE SMOOTH FLY ENGINE
 CreateToggle(TogglesList, "FLY", function(v)
 Toggles.Fly = v
 local lp = game.Players.LocalPlayer
 local char = lp.Character
 if char and char:FindFirstChild("Humanoid") then
-if v then char.Humanoid.PlatformStand = true else char.Humanoid.PlatformStand = false end
+char.Humanoid.PlatformStand = v
 end
 end)
 game:GetService("RunService").Heartbeat:Connect(function()
 local char = game.Players.LocalPlayer.Character
 if Toggles.Fly and char and char:FindFirstChild("HumanoidRootPart") then
-char.HumanoidRootPart.Velocity = Vector3.new(0, 2, 0) -- Hover velocity structure vector field
+local cam = workspace.CurrentCamera
+local moveDir = char.Humanoid.MoveDirection
+-- Mobile touch vector adapter field configuration
+if moveDir.Magnitude > 0 then
+char.HumanoidRootPart.Velocity = moveDir * 70
+else
+char.HumanoidRootPart.Velocity = Vector3.new(0, 0.1, 0) -- Pure stable floating anchor bypass
+end
 end
 end)
--- NEW: Infinite Jump Native Core Hook Engine Component
+
 CreateToggle(TogglesList, "INFINITE JUMP", function(v) Toggles.InfJump = v end)
 game:GetService("UserInputService").JumpRequest:Connect(function()
 if Toggles.InfJump and game.Players.LocalPlayer.Character and game.Players.LocalPlayer.Character:FindFirstChildOfClass("Humanoid") then
 game.Players.LocalPlayer.Character:FindFirstChildOfClass("Humanoid"):ChangeState("Jumping")
 end
 end)
-
--- NEW: Instant Server Rejoin Script Engine Core Component
 CreateButton(TogglesList, "REJOIN SERVER", function()
 game:GetService("TeleportService"):Teleport(game.PlaceId, game.Players.LocalPlayer)
 end)
--- NEW: Clean Client Character Invisible Engine Hook Component
-CreateButton(TogglesList, "INVISIBLE (FE)", function()
+-- UPDATED INVISIBLE (ON/OFF TOGGLE HOOK)
+CreateToggle(TogglesList, "INVISIBLE (FE)", function(v)
+Toggles.Invisible = v
 local player = game.Players.LocalPlayer
 local character = player.Character
+if v then
 if character and character:FindFirstChild("LowerTorso") then
-character.LowerTorso:Destroy() -- Safe network replication breaker method logic
+InvisibleClone = character.LowerTorso:Clone()
+character.LowerTorso:Destroy() -- Break replication path state cleanly
+end
+else
+if InvisibleClone and character then
+game:GetService("TeleportService"):Teleport(game.PlaceId, player) -- Safely revert state machine via rejoin sync
+end
 end
 end)
--- NEW: Advanced Custom Live Adjustable Input Config System Block Modules
 CreateCustomValueSlider(TogglesList, "⚡ CUSTOM WALKSPEED", 16, function(val)
 CustomWalkSpeed = val
-if game.Players.LocalPlayer.Character and game.Players.LocalPlayer.Character:FindFirstChild("Humanoid") then
-game.Players.LocalPlayer.Character.Humanoid.WalkSpeed = val
-end
+if game.Players.LocalPlayer.Character and game.Players.LocalPlayer.Character:FindFirstChild("Humanoid") then game.Players.LocalPlayer.Character.Humanoid.WalkSpeed = val end
 end)
 CreateCustomValueSlider(TogglesList, "🚀 CUSTOM JUMPPOWER", 50, function(val)
 CustomJumpPower = val
-if game.Players.LocalPlayer.Character and game.Players.LocalPlayer.Character:FindFirstChild("Humanoid") then
-game.Players.LocalPlayer.Character.Humanoid.JumpPower = val
-end
+if game.Players.LocalPlayer.Character and game.Players.LocalPlayer.Character:FindFirstChild("Humanoid") then game.Players.LocalPlayer.Character.Humanoid.JumpPower = val end
 end)
 CreateToggle(TogglesList, "SPIN CHARACTER", function(v)
 Toggles.Spin = v
-local hrp = game.Players.LocalPlayer.Character and game.Players.LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
 if not v and SpinObj then SpinObj:Destroy() SpinObj = nil end
 end)
 game:GetService("RunService").Heartbeat:Connect(function()
@@ -452,9 +472,8 @@ end
 SpinObj.AngularVelocity = Vector3.new(0, CustomSpinSpeed, 0)
 end
 end)
-CreateCustomValueSlider(TogglesList, "🌀 CUSTOM SPIN SPEED", 50, function(val)
-CustomSpinSpeed = val
-end)
+CreateCustomValueSlider(TogglesList, "🌀 CUSTOM SPIN SPEED", 50, function(val) CustomSpinSpeed = val end)
+
 -- ==========================================
 -- TAB 3 BUTTONS GENERATION
 -- ==========================================
@@ -465,8 +484,7 @@ local tp = game.Players:FindFirstChild(TargetPlayerName) if TargetPlayerName ~= 
 end)
 CreateButton(PlayerList, "PLAYER HEADSIT", function()
 if HeadSitLoop then HeadSitLoop:Disconnect() end
-local p1 = game.Players.LocalPlayer.Character
-local p2 = game.Workspace:FindFirstChild(TargetPlayerName)
+local p1, p2 = game.Players.LocalPlayer.Character, game.Workspace:FindFirstChild(TargetPlayerName)
 if TargetPlayerName ~= "" and p1 and p2 and p1:FindFirstChild("HumanoidRootPart") and p2:FindFirstChild("Head") then
 HeadSitLoop = game:GetService("RunService").Heartbeat:Connect(function()
 if p1 and p2 and p2:FindFirstChild("Head") and p1:FindFirstChild("HumanoidRootPart") then
@@ -476,3 +494,25 @@ end)
 end
 end)
 CreateButton(PlayerList, "❌ STOP ANIMATION", function() if BangLoop then BangLoop:Disconnect() BangLoop = nil end if HeadSitLoop then HeadSitLoop:Disconnect() HeadSitLoop = nil end end)
+-- ==========================================
+-- NEW TAB 4: NATIVE CORE SPAMMER ENGINE ONLY
+-- ==========================================
+local TextIn = CreateCustomValueSlider(SpammerList, "📝 SPAM TEXT:", "AYAN HUB ON TOP!", function(val) SpamText = tostring(val) end)
+local DelayIn = CreateCustomValueSlider(SpammerList, "⏱️ DELAY (SEC):", 1.5, function(val) SpamDelay = tonumber(val) or 1.5 end)
+CreateToggle(SpammerList, "🚀 START CHAT SPAMMER", function(v)
+Toggles.Spammer = v
+if SpamLoop then SpamLoop:Disconnect() SpamLoop = nil end
+if v then
+SpamLoop = game:GetService("RunService").Heartbeat:Connect(function()
+if Toggles.Spammer then
+local chatService = game:GetService("TextChatService")
+if chatService and chatService:FindFirstChild("TextChannels") and chatService.TextChannels:FindFirstChild("RBXGeneral") then
+chatService.TextChannels.RBXGeneral:SendAsync(SpamText)
+else
+game:GetService("ReplicatedStorage").DefaultChatSystemChatEvents.SayMessageRequest:FireServer(SpamText, "All")
+end
+task.wait(SpamDelay) -- Dynamic configuration spacing loop parameter delay field
+end
+end)
+end
+end)
