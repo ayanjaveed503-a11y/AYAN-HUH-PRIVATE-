@@ -23,7 +23,7 @@ local TargetPlayerName, BangLoop, HeadSitLoop, SpamLoop = "", nil, nil, nil
 
 -- State variables for Custom Sliders/Inputs
 local CustomWalkSpeed, CustomJumpPower, CustomSpinSpeed = 16, 50, 50
-local SpinObj, InvisibleClone, SpamText, SpamDelay = nil, nil, "AYAN HUB ON TOP!", 1.5
+local SpinObj, InvisibleClone, SpamText, SpamDelay = nil, nil, "AYAN HUB ON TOP!", 2.4
 
 -- UI State Elements
 local TargetPanelMinimized = false
@@ -182,7 +182,7 @@ end
 
 ScriptsList = CreateScrollList("ScriptsList", true, UDim2.new(0.03, 0, 0.24, 0), UDim2.new(0, 432, 0, 285), UDim2.new(0, 0, 4.5, 0))
 TogglesList = CreateScrollList("TogglesList", false, UDim2.new(0.03, 0, 0.24, 0), UDim2.new(0, 432, 0, 285), UDim2.new(0, 0, 4.5, 0))
-SpammerList = CreateScrollList("SpammerList", false, UDim2.new(0.03, 0, 0.24, 0), UDim2.new(0, 432, 0, 285), UDim2.new(0, 0, 1.5, 0))
+SpammerList = CreateScrollList("SpammerList", false, UDim2.new(0.03, 0, 0.24, 0), UDim2.new(0, 432, 0, 285), UDim2.new(0, 0, 2.0, 0))
 
 PlayerSearchBar.Name = "PlayerSearchBar"
 PlayerSearchBar.Parent = MainHub
@@ -494,25 +494,68 @@ end)
 end
 end)
 CreateButton(PlayerList, "❌ STOP ANIMATION", function() if BangLoop then BangLoop:Disconnect() BangLoop = nil end if HeadSitLoop then HeadSitLoop:Disconnect() HeadSitLoop = nil end end)
+
 -- ==========================================
--- NEW TAB 4: NATIVE CORE SPAMMER ENGINE ONLY
+-- NEW TAB 4: NATIVE CORE SPAMMER ENGINE (UPDATED)
 -- ==========================================
+local CustomSpamList = {
+    "Tmx MAI TOXIC KA AYAN😝TAP KARKE BOL AYAN PAPA OP✌🏻 🔮☄️",
+    "🔥✨ tmx GODZILA POWER SONIC BEEM UNLEASHED 100% MAXIMUM DESTRUCTION OVERLOAD 🔥✨",
+    "😝☄️ tmx SUPER ULTRA BRAZIL TIGER GORILLA PUNCH COMING THROUGH WITH UNSTOPPABLE JUNGLE FURY RAGE 😝☄️",
+    "✨☀️ tmx SUPER MEGA POWER WAVE TSUNAMI BLAST ACTIVATED ACROSS THE ENTIRE SERVER DIMENSION ✨☀️",
+    "🔥👾 tmx ULTIMATE BEAST MODE ACTIVATED: GODZILA ROAR COMBINED WITH TIGER SPEED AND GORILLA SMASH 🔥👾",
+    "☀️☄️ tmx ULTIMATE SONIC BEEM DESTRUCTION RAY BURNING DOWN EVERYTHING IN SIGHT ☀️☄️",
+    "🔮😝 tmx BRAZIL TIGER HYPER DRIFT KICK MEETS GORILLA EARTHQUAKE SMASH COMBO OF DOOM 🔮😝",
+    "✨🔥 tmx MEGA POWER WAVE IS OVERWHELMING THE ENTIRE SERVER WITH TIDAL WAVE TSUNAMI ENERGY ✨🔥",
+    "👾🎍 tmx WARNING: GODZILA POWER IS COMPLETELY UNSTOPPABLE IN THE CHAT ROOM RIGHT NOW 👾🎍",
+    "🔥😝 tmx GORILLA PUNCH EARTHQUAKE SHAKE CAUSING MASSIVE DAMAGE EVERYWHERE 🔥😝",
+    "✨🎐 tmx SONIC BEEM CHARGING UP TO MAXIMUM OVERDRIVE POWER LEVEL INFINITE LIGHTNING SPEED ✨🎐",
+    "☀️👾 tmx BRAZIL TIGER JUNGLE FURY SAVAGE ATTACK SWEEPING AWAY ALL OPPONENTS IN THE ARENA ☀️👾",
+    "🔮☄️ tmx MEGA POWER WAVE WASHING AWAY EVERY SINGLE PLAYER WITH AN OCEANIC TSUNAMI STORM 🔮☄️",
+    "🔥✨ tmx GODZILA ATOMIC BREATH READY TO FIRE ACROSS THE SKIES BRINGING TOTAL ANNIHILATION 🔥✨",
+    "😝☀️ tmx ULTRA SUPER SAIYAN GORILLA RAGE UNLEASHED WITH PRIMAL INSTINCT ☀️",
+    "🎐🔮 tmx SONIC BEEM SPEED OF LIGHT BEATDOWN LEAVING ONLY ELECTRIC SPARKS IN THE AIR 🎐🔮",
+    "☄️👾 tmx BRAZIL TIGER CLAW SLASH OF DOOM CUTTING THROUGH DIMENSIONS WITH HYPER PRECISION ☄️👾",
+    "✨🔥 tmx SUPER MEGA POWER WAVE TSUNAMI STORM CRASHING INTO THE MAIN GATES WITH FORCE ✨🔥",
+    "😝🎐 tmx GODZILA VS GORILLA ULTIMATE CLASH OF THE TITANS BATTLE OF THE CENTURY 😝🎐",
+    "🔥🔮 tmx SONIC BEEM THUNDERSTORM STRIKE SHATTERING THE SOUND BARRIER 🔥🔮",
+    "🎍✨ tmx BRAZIL TIGER HYPER DRIFT KICK DRIFTING ACROSS THE MAP AT LIGHTNING SPEED 🎍✨",
+    "☀️☄️ tmx MEGA POWER WAVE MAXIMUM OVERDRIVE TIDAL WAVE ENERGY SURGE ACTIVATED ☀️☄️",
+    "🔥👾 tmx ULTIMATE GODZILA TAIL WHIP DESTRUCTION LEVEL 9999 ACTIVATED IN THE SECTOR 🔥👾",
+    "✨🎐 tmx GORILLA CHEST BEAT SOUNDWAVE BLAST SHAKING THE FOUNDATIONS OF THE EARTH ✨🎐",
+    "☀️☄️ tmx SONIC BEEM HYPER LASER BEAM MELTING EVERYTHING IN ITS PATH ☀️☄️",
+    "👾🔥 tmx BRAZIL TIGER SAVAGE BITE ATTACK OF THE JUNGLE KINGDOM LORDS 👾🔥",
+    "🎐🎍 tmx SUPER MEGA POWER WAVE OCEAN CRASH TIDAL WAVE DELUGE SWEEPING THE MAP CLEAN 🎐🎍",
+    "😝🔮 tmx GODZILA KING OF THE MONSTERS ROAR ECHOING ACROSS THE ENTIRE UNIVERSE 😝🔮",
+    "🔥👾 tmx GORILLA SMASH GROUND ZERO IMPACT CRATER CREATION PROTOCOL ONLINE 🔥👾",
+    "☀️🎐 tmx SONIC BEEM LIGHTNING SPEED DASH ACROSS ALL SERVERS ☀️🎐",
+    "🔮😝 tmx BRAZIL TIGER JUNGLE KING DOMINATION REIGNING SUPREME OVER EVERYONE 🔮😝",
+    "✨☄️ tmx MEGA POWER WAVE TIDAL WAVE ONSLAUGHT SWEEPING AWAY ALL DEFENSES ✨☄️",
+    "🔥👾 tmx ULTIMATE GODZILA HEAT RAY MELTDOWN CAUSING VOLCANIC ERUPTIONS EVERYWHERE 🔥👾"
+}
+
 local TextIn = CreateCustomValueSlider(SpammerList, "📝 SPAM TEXT:", "AYAN HUB ON TOP!", function(val) SpamText = tostring(val) end)
-local DelayIn = CreateCustomValueSlider(SpammerList, "⏱️ DELAY (SEC):", 1.5, function(val) SpamDelay = tonumber(val) or 1.5 end)
+local DelayIn = CreateCustomValueSlider(SpammerList, "⏱️ DELAY (SEC):", 2.4, function(val) SpamDelay = tonumber(val) or 2.4 end)
+
 CreateToggle(SpammerList, "🚀 START CHAT SPAMMER", function(v)
-Toggles.Spammer = v
-if SpamLoop then SpamLoop:Disconnect() SpamLoop = nil end
-if v then
-SpamLoop = game:GetService("RunService").Heartbeat:Connect(function()
-if Toggles.Spammer then
-local chatService = game:GetService("TextChatService")
-if chatService and chatService:FindFirstChild("TextChannels") and chatService.TextChannels:FindFirstChild("RBXGeneral") then
-chatService.TextChannels.RBXGeneral:SendAsync(SpamText)
-else
-game:GetService("ReplicatedStorage").DefaultChatSystemChatEvents.SayMessageRequest:FireServer(SpamText, "All")
-end
-task.wait(SpamDelay) -- Dynamic configuration spacing loop parameter delay field
-end
-end)
-end
+    Toggles.Spammer = v
+    if SpamLoop then SpamLoop:Disconnect() SpamLoop = nil end
+    if v then
+        local index = 1
+        SpamLoop = game:GetService("RunService").Heartbeat:Connect(function()
+            if Toggles.Spammer then
+                local messageToSend = CustomSpamList[index] or SpamText
+                index = index + 1
+                if index > #CustomSpamList then index = 1 end
+                
+                local chatService = game:GetService("TextChatService")
+                if chatService and chatService:FindFirstChild("TextChannels") and chatService.TextChannels:FindFirstChild("RBXGeneral") then
+                    chatService.TextChannels.RBXGeneral:SendAsync(messageToSend)
+                else
+                    game:GetService("ReplicatedStorage").DefaultChatSystemChatEvents.SayMessageRequest:FireServer(messageToSend, "All")
+                end
+                task.wait(SpamDelay) -- Dynamic configuration spacing loop parameter delay field
+            end
+        end)
+    end
 end)
