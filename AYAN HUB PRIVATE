@@ -258,7 +258,7 @@ local function CreateToggle(parentList, name, callback)
         enabled = not enabled
         ToggleBtn.BackgroundColor3 = enabled and Color3.fromRGB(30, 100, 30) or Color3.fromRGB(60, 30, 30)
         ToggleBtn.Text = name .. (enabled and " : ON" or " : OFF")
-        callback(enabled)
+callback(enabled)
 end)
 return ToggleBtn
 end
