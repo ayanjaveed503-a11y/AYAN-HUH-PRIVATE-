@@ -1,5 +1,5 @@
 -- ==========================================================
--- AYAN HUB v1 (PREMIUM CYBERPUNK EDITION)
+-- AYAN HUB v1 (MINIMIZE PANEL & TARGET FIX UPDATE)
 -- Password is: ATB
 -- ==========================================================
 local ScreenGui = Instance.new("ScreenGui")
@@ -21,10 +21,14 @@ local UIListLayout1, UIListLayout2, UIListLayout3 = Instance.new("UIListLayout")
 local Toggles = { Noclip = false, ESP = false, WalkFling = false, AntiFling = false, Custom1 = false, Custom2 = false }
 local TargetPlayerName, BangLoop, HeadSitLoop = "", nil, nil
 
+-- NEW: Target Panel Minimize State & UI Elements
+local TargetPanelMinimized = false
+local MinimizePlayerListBtn = Instance.new("TextButton")
+local TargetNameLabel = Instance.new("TextLabel")
+
 ScreenGui.Parent = game.CoreGui
 ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 
--- PREMIUM UI UTILITIES (ROUNDED & BORDERS)
 local function StyleElement(element, radius, strokeColor)
     local corner = Instance.new("UICorner")
     corner.CornerRadius = UDim.new(0, radius)
@@ -38,7 +42,7 @@ local function StyleElement(element, radius, strokeColor)
     end
 end
 
--- 1. PASSWORD SCREEN (PREMIUM MOD)
+-- 1. PASSWORD SCREEN
 PasswordFrame.Name = "PasswordFrame"
 PasswordFrame.Parent = ScreenGui
 PasswordFrame.BackgroundColor3 = Color3.fromRGB(18, 18, 18)
@@ -71,7 +75,7 @@ SubmitBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
 SubmitBtn.TextSize = 13
 StyleElement(SubmitBtn, 6)
 
--- 2. MAIN HUB SCREEN (PREMIUM MOD)
+-- 2. MAIN HUB SCREEN
 MainHub.Name = "MainHub"
 MainHub.Parent = ScreenGui
 MainHub.BackgroundColor3 = Color3.fromRGB(14, 14, 14)
@@ -92,7 +96,7 @@ Title.TextColor3 = Color3.fromRGB(0, 170, 255)
 Title.TextSize = 14
 Title.TextXAlignment = Enum.TextXAlignment.Left
 StyleElement(Title, 10)
-local TitleHideCut = Instance.new("Frame", Title) -- Fix top corner rounding artifacts
+local TitleHideCut = Instance.new("Frame", Title)
 TitleHideCut.Size = UDim2.new(1, 0, 0.5, 0) TitleHideCut.Position = UDim2.new(0,0,0.5,0) TitleHideCut.BackgroundColor3 = Color3.fromRGB(22,22,22) TitleHideCut.BorderSizePixel = 0 TitleHideCut.ZIndex = 0
 
 CloseBtnHub.Name = "CloseBtnHub"
@@ -170,15 +174,40 @@ local function CreateScrollList(name, visible, pos, size, canvas)
     return List
 end
 
--- PREMIUM FIXED POSITIONING LAYER
 ScriptsList = CreateScrollList("ScriptsList", true, UDim2.new(0.03, 0, 0.24, 0), UDim2.new(0, 432, 0, 285), UDim2.new(0, 0, 4.5, 0))
 TogglesList = CreateScrollList("TogglesList", false, UDim2.new(0.03, 0, 0.24, 0), UDim2.new(0, 432, 0, 285), UDim2.new(0, 0, 1.8, 0))
 
-local PlayerDropdown = CreateScrollList("PlayerDropdown", false, UDim2.new(0.03, 0, 0.24, 0), UDim2.new(0, 432, 0, 105), UDim2.new(0, 0, 4, 0))
+-- TAB 3 PRECISE LAYER DESIGN WITH MINIMIZE SYSTEM
+local PlayerDropdown = CreateScrollList("PlayerDropdown", false, UDim2.new(0.03, 0, 0.24, 0), UDim2.new(0, 432, 0, 95), UDim2.new(0, 0, 4, 0))
 PlayerDropdown.BackgroundColor3 = Color3.fromRGB(10, 10, 10)
 StyleElement(PlayerDropdown, 6, Color3.fromRGB(30, 30, 30))
 
-PlayerList = CreateScrollList("PlayerList", false, UDim2.new(0.03, 0, 0.53, 0), UDim2.new(0, 432, 0, 170), UDim2.new(0, 0, 2.2, 0))
+-- Info Engine Bar (Target Name Display & Minimize Control)
+TargetNameLabel.Name = "TargetNameLabel"
+TargetNameLabel.Parent = MainHub
+TargetNameLabel.BackgroundTransparency = 1
+TargetNameLabel.Position = UDim2.new(0.04, 0, 0.49, 0)
+TargetNameLabel.Size = UDim2.new(0, 350, 0, 15)
+TargetNameLabel.Font = Enum.Font.GothamBold
+TargetNameLabel.Text = "Target: None"
+TargetNameLabel.TextColor3 = Color3.fromRGB(0, 170, 255)
+TargetNameLabel.TextSize = 11
+TargetNameLabel.TextXAlignment = Enum.TextXAlignment.Left
+TargetNameLabel.Visible = false
+
+MinimizePlayerListBtn.Name = "MinimizePlayerListBtn"
+MinimizePlayerListBtn.Parent = MainHub
+MinimizePlayerListBtn.BackgroundColor3 = Color3.fromRGB(24, 24, 24)
+MinimizePlayerListBtn.Position = UDim2.new(0.90, 0, 0.485, 0)
+MinimizePlayerListBtn.Size = UDim2.new(0, 38, 0, 18)
+MinimizePlayerListBtn.Font = Enum.Font.GothamBold
+MinimizePlayerListBtn.Text = "^"
+MinimizePlayerListBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+MinimizePlayerListBtn.TextSize = 12
+StyleElement(MinimizePlayerListBtn, 4, Color3.fromRGB(45, 45, 45))
+MinimizePlayerListBtn.Visible = false
+
+PlayerList = CreateScrollList("PlayerList", false, UDim2.new(0.03, 0, 0.54, 0), UDim2.new(0, 432, 0, 165), UDim2.new(0, 0, 2.2, 0))
 
 local function ApplyLayout(layout, parent)
     layout.Parent = parent layout.SortOrder = Enum.SortOrder.LayoutOrder layout.Padding = UDim.new(0, 6)
@@ -188,6 +217,20 @@ ApplyLayout(UIListLayout2, TogglesList)
 ApplyLayout(UIListLayout3, PlayerList)
 local DropdownLayout = Instance.new("UIListLayout") ApplyLayout(DropdownLayout, PlayerDropdown)
 
+-- Tab 3 Minimize Trigger Logic
+MinimizePlayerListBtn.MouseButton1Click:Connect(function()
+    TargetPanelMinimized = not TargetPanelMinimized
+    if TargetPanelMinimized then
+        MinimizePlayerListBtn.Text = "v"
+        PlayerList.Visible = false
+        PlayerDropdown.Size = UDim2.new(0, 432, 0, 260) -- Expand dropdown to take space
+    else
+        MinimizePlayerListBtn.Text = "^"
+        PlayerList.Visible = true
+        PlayerDropdown.Size = UDim2.new(0, 432, 0, 95)  -- Shrink dropdown back
+    end
+end)
+
 local function RefreshPlayerDropdown()
     for _, child in pairs(PlayerDropdown:GetChildren()) do if child:IsA("TextButton") then child:Destroy() end end
     for _, player in pairs(game.Players:GetPlayers()) do
@@ -195,39 +238,49 @@ local function RefreshPlayerDropdown()
             local PBtn = Instance.new("TextButton")
             PBtn.Parent = PlayerDropdown
             PBtn.BackgroundColor3 = Color3.fromRGB(24, 24, 24)
-            PBtn.Size = UDim2.new(1, -8, 0, 32)
-            PBtn.Font = Enum.Font.GothamBold
-            PBtn.Text = "   " .. player.DisplayName .. " (@" .. player.Name .. ")"
-            PBtn.TextColor3 = Color3.fromRGB(220, 220, 220)
-            PBtn.TextSize = 11
-            PBtn.TextXAlignment = Enum.TextXAlignment.Left
-            StyleElement(PBtn, 4)
-            PBtn.MouseButton1Click:Connect(function()
-                TargetPlayerName = player.Name
-                for _, b in pairs(PlayerDropdown:GetChildren()) do if b:IsA("TextButton") then b.TextColor3 = Color3.fromRGB(220, 220, 220) b.BackgroundColor3 = Color3.fromRGB(24,24,24) end end
-                PBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
-                PBtn.BackgroundColor3 = Color3.fromRGB(0, 100, 180)
-            end)
-        end
-    end
+PBtn.Size = UDim2.new(1, -8, 0, 32)
+PBtn.Font = Enum.Font.GothamBold
+PBtn.Text = "   " .. player.DisplayName .. " (@" .. player.Name .. ")"
+PBtn.TextColor3 = Color3.fromRGB(220, 220, 220)
+PBtn.TextSize = 11
+PBtn.TextXAlignment = Enum.TextXAlignment.Left
+StyleElement(PBtn, 4)
+PBtn.MouseButton1Click:Connect(function()
+TargetPlayerName = player.Name
+TargetNameLabel.Text = "Target: " .. player.DisplayName .. " (@" .. player.Name .. ")"
+for _, b in pairs(PlayerDropdown:GetChildren()) do if b:IsA("TextButton") then b.TextColor3 = Color3.fromRGB(220, 220, 220) b.BackgroundColor3 = Color3.fromRGB(24,24,24) end end
+PBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+PBtn.BackgroundColor3 = Color3.fromRGB(0, 100, 180)
+end)
+end
+end
 end
 game.Players.PlayerAdded:Connect(RefreshPlayerDropdown)
 game.Players.PlayerRemoving:Connect(RefreshPlayerDropdown)
-
 SubmitBtn.MouseButton1Click:Connect(function()
-    if PasswordInput.Text == "ATB" then PasswordFrame.Visible = false MainHub.Visible = true else PasswordInput.Text = "" PasswordInput.PlaceholderText = "ACCESS DENIED!" PasswordInput.PlaceholderColor3 = Color3.fromRGB(255, 50, 50) end
+if PasswordInput.Text == "ATB" then PasswordFrame.Visible = false MainHub.Visible = true else PasswordInput.Text = "" PasswordInput.PlaceholderText = "ACCESS DENIED!" PasswordInput.PlaceholderColor3 = Color3.fromRGB(255, 50, 50) end
 end)
 MinimizeBtnHub.MouseButton1Click:Connect(function() MainHub.Visible = false OpenIconBtn.Visible = true end)
 OpenIconBtn.MouseButton1Click:Connect(function() OpenIconBtn.Visible = false MainHub.Visible = true end)
 CloseBtnHub.MouseButton1Click:Connect(function()
-    if BangLoop then BangLoop:Disconnect() end if HeadSitLoop then HeadSitLoop:Disconnect() end
-    Toggles.ESP = false task.wait(0.1)
+if BangLoop then BangLoop:Disconnect() end if HeadSitLoop then HeadSitLoop:Disconnect() end
+Toggles.ESP = false task.wait(0.1)
 for _, p in pairs(game.Players:GetPlayers()) do if p.Character and p.Character:FindFirstChild("HubESP") then p.Character.HubESP:Destroy() end end
 ScreenGui:Destroy()
 end)
 local function SwitchTab(activeList, activeBtn, inactiveBtn1, inactiveBtn2)
-ScriptsList.Visible = (ScriptsList == activeList) TogglesList.Visible = (TogglesList == activeList) PlayerList.Visible = (PlayerList == activeList) PlayerDropdown.Visible = (PlayerList == activeList)
-if PlayerList == activeList then RefreshPlayerDropdown() end
+ScriptsList.Visible = (ScriptsList == activeList) TogglesList.Visible = (TogglesList == activeList)
+-- Sync special panel items for Tab 3
+local isPlayerTab = (PlayerList == activeList)
+PlayerDropdown.Visible = isPlayerTab
+TargetNameLabel.Visible = isPlayerTab
+MinimizePlayerListBtn.Visible = isPlayerTab
+if isPlayerTab then
+RefreshPlayerDropdown()
+PlayerList.Visible = not TargetPanelMinimized
+else
+PlayerList.Visible = false
+end
 activeBtn.BackgroundColor3, activeBtn.TextColor3 = Color3.fromRGB(30, 30, 30), Color3.fromRGB(255, 255, 255)
 inactiveBtn1.BackgroundColor3, inactiveBtn1.TextColor3 = Color3.fromRGB(20, 20, 20), Color3.fromRGB(140, 140, 140)
 inactiveBtn2.BackgroundColor3, inactiveBtn2.TextColor3 = Color3.fromRGB(20, 20, 20), Color3.fromRGB(140, 140, 140)
@@ -235,6 +288,7 @@ end
 ScriptsTabBtn.MouseButton1Click:Connect(function() SwitchTab(ScriptsList, ScriptsTabBtn, TogglesTabBtn, PlayerTabBtn) end)
 TogglesTabBtn.MouseButton1Click:Connect(function() SwitchTab(TogglesList, TogglesTabBtn, ScriptsTabBtn, PlayerTabBtn) end)
 PlayerTabBtn.MouseButton1Click:Connect(function() SwitchTab(PlayerList, PlayerTabBtn, ScriptsTabBtn, TogglesTabBtn) end)
+
 local function CreateButton(parentList, name, callback)
 local Btn = Instance.new("TextButton")
 Btn.Parent = parentList Btn.BackgroundColor3 = Color3.fromRGB(28, 28, 28) Btn.Size = UDim2.new(1, -10, 0, 38) Btn.Font = Enum.Font.GothamBold Btn.Text = name Btn.TextColor3 = Color3.fromRGB(240, 240, 240) Btn.TextSize = 12
@@ -250,9 +304,12 @@ return ToggleBtn
 end
 local function RunAnimationLoop(offsetCFrame)
 if BangLoop then BangLoop:Disconnect() end
-local p1, p2 = game.Players.LocalPlayer.Character, game.Workspace:FindFirstChild(TargetPlayerName)
+local p1 = game.Players.LocalPlayer.Character
+local p2 = game.Workspace:FindFirstChild(TargetPlayerName)
 if p1 and p2 and p1:FindFirstChild("HumanoidRootPart") and p2:FindFirstChild("HumanoidRootPart") then
-local myHRP, targetHRP, moveIn = p1.HumanoidRootPart, p2.HumanoidRootPart, true
+local myHRP = p1.HumanoidRootPart
+local targetHRP = p2.HumanoidRootPart
+local moveIn = true
 BangLoop = game:GetService("RunService").Heartbeat:Connect(function()
 if p1 and p2 and p1:FindFirstChild("HumanoidRootPart") and p2:FindFirstChild("HumanoidRootPart") then
 myHRP.CFrame = targetHRP.CFrame * offsetCFrame * CFrame.new(0, 0, moveIn and 0.4 or -0.4) moveIn = not moveIn
@@ -288,15 +345,28 @@ game:GetService("RunService").Heartbeat:Connect(function()
 local p1 = game.Players.LocalPlayer.Character if Toggles.AntiFling and p1 and p1:FindFirstChild("HumanoidRootPart") then for _, part in pairs(p1:GetDescendants()) do if part:IsA("BasePart") then part.Velocity, part.RotVelocity = Vector3.new(0, 0, 0), Vector3.new(0, 0, 0) end end end
 end)
 CreateButton(PlayerList, "BANG", function() if TargetPlayerName ~= "" then RunAnimationLoop(CFrame.new(0, 0, 1.2)) end end)
-CreateButton(PlayerList, "MOUTH BANG", function() if TargetPlayerName ~= "" then RunAnimationLoop(CFrame.new(0, -0.6, -1.2) * CFrame.Angles(0, math.rad(180), 0)) end end)
+-- FIXED: MouthBang native direction loop vector angle fix
+CreateButton(PlayerList, "MOUTH BANG", function()
+if TargetPlayerName ~= "" then
+RunAnimationLoop(CFrame.new(0, -0.8, -1.1) * CFrame.Angles(0, math.rad(180), 0))
+end
+end)
 CreateButton(PlayerList, "PLAYER BACKSIT", function()
 local tp = game.Players:FindFirstChild(TargetPlayerName) if TargetPlayerName ~= "" and tp and tp.Character and tp.Character:FindFirstChild("HumanoidRootPart") then game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = tp.Character.HumanoidRootPart.CFrame * CFrame.new(0, 1.5, 0.2) end
 end)
+-- FIXED: Accurate HeadSit loop tracking with clean upright global angles orientation
 CreateButton(PlayerList, "PLAYER HEADSIT", function()
 if HeadSitLoop then HeadSitLoop:Disconnect() end
-local p1, p2 = game.Players.LocalPlayer.Character, game.Workspace:FindFirstChild(TargetPlayerName)
+local p1 = game.Players.LocalPlayer.Character
+local p2 = game.Workspace:FindFirstChild(TargetPlayerName)
 if TargetPlayerName ~= "" and p1 and p2 and p1:FindFirstChild("HumanoidRootPart") and p2:FindFirstChild("Head") then
-HeadSitLoop = game:GetService("RunService").Heartbeat:Connect(function() if p1 and p2 and p2:FindFirstChild("Head") and p1:FindFirstChild("HumanoidRootPart") then p1.HumanoidRootPart.CFrame = p2.Head.CFrame * CFrame.new(0, 1.3, 0) else if HeadSitLoop then HeadSitLoop:Disconnect() end end end)
+HeadSitLoop = game:GetService("RunService").Heartbeat:Connect(function()
+if p1 and p2 and p2:FindFirstChild("Head") and p1:FindFirstChild("HumanoidRootPart") then
+p1.HumanoidRootPart.CFrame = CFrame.new((p2.Head.CFrame * CFrame.new(0, 1.25, 0)).Position) * CFrame.Angles(0, math.rad(p2.Head.Orientation.Y), 0)
+else
+if HeadSitLoop then HeadSitLoop:Disconnect() end
+end
+end)
 end
 end)
 CreateButton(PlayerList, "❌ STOP ANIMATION", function() if BangLoop then BangLoop:Disconnect() BangLoop = nil end if HeadSitLoop then HeadSitLoop:Disconnect() HeadSitLoop = nil end end)
