@@ -254,7 +254,7 @@ local function CreateToggle(parentList, name, callback)
     ToggleBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
     ToggleBtn.TextSize = 16.000
     
-    ToggleBtn.MouseButton1Click:Connect(function()
+        ToggleBtn.MouseButton1Click:Connect(function()
         enabled = not enabled
         ToggleBtn.BackgroundColor3 = enabled and Color3.fromRGB(30, 100, 30) or Color3.fromRGB(60, 30, 30)
         ToggleBtn.Text = name .. (enabled and " : ON" or " : OFF")
@@ -262,6 +262,8 @@ callback(enabled)
 end)
 return ToggleBtn
 end
+
+
 -- Fixed Built-in Custom Target Loop Engine
 local function RunAnimationLoop(offsetCFrame)
 if BangLoop then BangLoop:Disconnect() end
