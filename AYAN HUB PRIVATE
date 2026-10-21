@@ -1,5 +1,5 @@
 -- ==========================================================
--- AYAN HUB v1 (MINIMIZE PANEL & TARGET FIX UPDATE)
+-- AYAN HUB v1 (SEARCH BAR & ADVANCED CUSTOM TAB 2 UPDATE)
 -- Password is: ATB
 -- ==========================================================
 local ScreenGui = Instance.new("ScreenGui")
@@ -18,13 +18,18 @@ local ScriptsTabBtn, TogglesTabBtn, PlayerTabBtn = Instance.new("TextButton"), I
 local ScriptsList, TogglesList, PlayerList = Instance.new("ScrollingFrame"), Instance.new("ScrollingFrame"), Instance.new("ScrollingFrame")
 local UIListLayout1, UIListLayout2, UIListLayout3 = Instance.new("UIListLayout"), Instance.new("UIListLayout"), Instance.new("UIListLayout")
 
-local Toggles = { Noclip = false, ESP = false, WalkFling = false, AntiFling = false, Custom1 = false, Custom2 = false }
+local Toggles = { Noclip = false, ESP = false, WalkFling = false, AntiFling = false, Fly = false, InfJump = false, Spin = false }
 local TargetPlayerName, BangLoop, HeadSitLoop = "", nil, nil
 
--- NEW: Target Panel Minimize State & UI Elements
+-- State variables for Custom Sliders/Inputs
+local CustomWalkSpeed, CustomJumpPower, CustomSpinSpeed = 16, 50, 50
+local SpinObj = nil
+
+-- UI State Elements
 local TargetPanelMinimized = false
 local MinimizePlayerListBtn = Instance.new("TextButton")
 local TargetNameLabel = Instance.new("TextLabel")
+local PlayerSearchBar = Instance.new("TextBox") -- NEW: Real-time Search Engine
 
 ScreenGui.Parent = game.CoreGui
 ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
@@ -175,18 +180,30 @@ local function CreateScrollList(name, visible, pos, size, canvas)
 end
 
 ScriptsList = CreateScrollList("ScriptsList", true, UDim2.new(0.03, 0, 0.24, 0), UDim2.new(0, 432, 0, 285), UDim2.new(0, 0, 4.5, 0))
-TogglesList = CreateScrollList("TogglesList", false, UDim2.new(0.03, 0, 0.24, 0), UDim2.new(0, 432, 0, 285), UDim2.new(0, 0, 1.8, 0))
+TogglesList = CreateScrollList("TogglesList", false, UDim2.new(0.03, 0, 0.24, 0), UDim2.new(0, 432, 0, 285), UDim2.new(0, 0, 4.5, 0))
 
--- TAB 3 PRECISE LAYER DESIGN WITH MINIMIZE SYSTEM
-local PlayerDropdown = CreateScrollList("PlayerDropdown", false, UDim2.new(0.03, 0, 0.24, 0), UDim2.new(0, 432, 0, 95), UDim2.new(0, 0, 4, 0))
+-- NEW: Tab 3 Real-time Player Search Bar Layout
+PlayerSearchBar.Name = "PlayerSearchBar"
+PlayerSearchBar.Parent = MainHub
+PlayerSearchBar.BackgroundColor3 = Color3.fromRGB(26, 26, 26)
+PlayerSearchBar.Position = UDim2.new(0.03, 0, 0.24, 0)
+PlayerSearchBar.Size = UDim2.new(0, 432, 0, 30)
+PlayerSearchBar.Font = Enum.Font.GothamBold
+PlayerSearchBar.PlaceholderText = "🔍 Search Target Player By Name..."
+PlayerSearchBar.Text = ""
+PlayerSearchBar.TextColor3 = Color3.fromRGB(255, 255, 255)
+PlayerSearchBar.TextSize = 12
+PlayerSearchBar.Visible = false
+StyleElement(PlayerSearchBar, 6, Color3.fromRGB(45, 45, 45))
+
+local PlayerDropdown = CreateScrollList("PlayerDropdown", false, UDim2.new(0.03, 0, 0.33, 0), UDim2.new(0, 432, 0, 80), UDim2.new(0, 0, 4, 0))
 PlayerDropdown.BackgroundColor3 = Color3.fromRGB(10, 10, 10)
 StyleElement(PlayerDropdown, 6, Color3.fromRGB(30, 30, 30))
 
--- Info Engine Bar (Target Name Display & Minimize Control)
 TargetNameLabel.Name = "TargetNameLabel"
 TargetNameLabel.Parent = MainHub
 TargetNameLabel.BackgroundTransparency = 1
-TargetNameLabel.Position = UDim2.new(0.04, 0, 0.49, 0)
+TargetNameLabel.Position = UDim2.new(0.04, 0, 0.55, 0)
 TargetNameLabel.Size = UDim2.new(0, 350, 0, 15)
 TargetNameLabel.Font = Enum.Font.GothamBold
 TargetNameLabel.Text = "Target: None"
@@ -198,7 +215,7 @@ TargetNameLabel.Visible = false
 MinimizePlayerListBtn.Name = "MinimizePlayerListBtn"
 MinimizePlayerListBtn.Parent = MainHub
 MinimizePlayerListBtn.BackgroundColor3 = Color3.fromRGB(24, 24, 24)
-MinimizePlayerListBtn.Position = UDim2.new(0.90, 0, 0.485, 0)
+MinimizePlayerListBtn.Position = UDim2.new(0.90, 0, 0.545, 0)
 MinimizePlayerListBtn.Size = UDim2.new(0, 38, 0, 18)
 MinimizePlayerListBtn.Font = Enum.Font.GothamBold
 MinimizePlayerListBtn.Text = "^"
@@ -207,7 +224,7 @@ MinimizePlayerListBtn.TextSize = 12
 StyleElement(MinimizePlayerListBtn, 4, Color3.fromRGB(45, 45, 45))
 MinimizePlayerListBtn.Visible = false
 
-PlayerList = CreateScrollList("PlayerList", false, UDim2.new(0.03, 0, 0.54, 0), UDim2.new(0, 432, 0, 165), UDim2.new(0, 0, 2.2, 0))
+PlayerList = CreateScrollList("PlayerList", false, UDim2.new(0.03, 0, 0.60, 0), UDim2.new(0, 432, 0, 140), UDim2.new(0, 0, 2.2, 0))
 
 local function ApplyLayout(layout, parent)
     layout.Parent = parent layout.SortOrder = Enum.SortOrder.LayoutOrder layout.Padding = UDim.new(0, 6)
@@ -217,27 +234,31 @@ ApplyLayout(UIListLayout2, TogglesList)
 ApplyLayout(UIListLayout3, PlayerList)
 local DropdownLayout = Instance.new("UIListLayout") ApplyLayout(DropdownLayout, PlayerDropdown)
 
--- Tab 3 Minimize Trigger Logic
+-- Tab 3 Minimize Logic Fixes
 MinimizePlayerListBtn.MouseButton1Click:Connect(function()
     TargetPanelMinimized = not TargetPanelMinimized
     if TargetPanelMinimized then
         MinimizePlayerListBtn.Text = "v"
         PlayerList.Visible = false
-        PlayerDropdown.Size = UDim2.new(0, 432, 0, 260) -- Expand dropdown to take space
-    else
-        MinimizePlayerListBtn.Text = "^"
-        PlayerList.Visible = true
-        PlayerDropdown.Size = UDim2.new(0, 432, 0, 95)  -- Shrink dropdown back
-    end
+PlayerDropdown.Size = UDim2.new(0, 432, 0, 220)
+else
+MinimizePlayerListBtn.Text = "^"
+PlayerList.Visible = true
+PlayerDropdown.Size = UDim2.new(0, 432, 0, 80)
+end
 end)
-
+-- NEW: Core Filter Logic for Live Dropdown Search Engine
 local function RefreshPlayerDropdown()
-    for _, child in pairs(PlayerDropdown:GetChildren()) do if child:IsA("TextButton") then child:Destroy() end end
-    for _, player in pairs(game.Players:GetPlayers()) do
-        if player ~= game.Players.LocalPlayer then
-            local PBtn = Instance.new("TextButton")
-            PBtn.Parent = PlayerDropdown
-            PBtn.BackgroundColor3 = Color3.fromRGB(24, 24, 24)
+for _, child in pairs(PlayerDropdown:GetChildren()) do if child:IsA("TextButton") then child:Destroy() end end
+local filterText = string.lower(PlayerSearchBar.Text)
+for _, player in pairs(game.Players:GetPlayers()) do
+if player ~= game.Players.LocalPlayer then
+local dispMatches = string.find(string.lower(player.DisplayName), filterText)
+local nameMatches = string.find(string.lower(player.Name), filterText)
+if filterText == "" or dispMatches or nameMatches then
+local PBtn = Instance.new("TextButton")
+PBtn.Parent = PlayerDropdown
+PBtn.BackgroundColor3 = Color3.fromRGB(24, 24, 24)
 PBtn.Size = UDim2.new(1, -8, 0, 32)
 PBtn.Font = Enum.Font.GothamBold
 PBtn.Text = "   " .. player.DisplayName .. " (@" .. player.Name .. ")"
@@ -255,6 +276,10 @@ end)
 end
 end
 end
+end
+PlayerSearchBar.Changed:Connect(function(prop)
+if prop == "Text" then RefreshPlayerDropdown() end
+end)
 game.Players.PlayerAdded:Connect(RefreshPlayerDropdown)
 game.Players.PlayerRemoving:Connect(RefreshPlayerDropdown)
 SubmitBtn.MouseButton1Click:Connect(function()
@@ -264,14 +289,15 @@ MinimizeBtnHub.MouseButton1Click:Connect(function() MainHub.Visible = false Open
 OpenIconBtn.MouseButton1Click:Connect(function() OpenIconBtn.Visible = false MainHub.Visible = true end)
 CloseBtnHub.MouseButton1Click:Connect(function()
 if BangLoop then BangLoop:Disconnect() end if HeadSitLoop then HeadSitLoop:Disconnect() end
-Toggles.ESP = false task.wait(0.1)
+Toggles.ESP = false Toggles.Spin = false Toggles.Fly = false Toggles.InfJump = false task.wait(0.1)
+if SpinObj then SpinObj:Destroy() end
 for _, p in pairs(game.Players:GetPlayers()) do if p.Character and p.Character:FindFirstChild("HubESP") then p.Character.HubESP:Destroy() end end
 ScreenGui:Destroy()
 end)
 local function SwitchTab(activeList, activeBtn, inactiveBtn1, inactiveBtn2)
 ScriptsList.Visible = (ScriptsList == activeList) TogglesList.Visible = (TogglesList == activeList)
--- Sync special panel items for Tab 3
 local isPlayerTab = (PlayerList == activeList)
+PlayerSearchBar.Visible = isPlayerTab
 PlayerDropdown.Visible = isPlayerTab
 TargetNameLabel.Visible = isPlayerTab
 MinimizePlayerListBtn.Visible = isPlayerTab
@@ -288,19 +314,32 @@ end
 ScriptsTabBtn.MouseButton1Click:Connect(function() SwitchTab(ScriptsList, ScriptsTabBtn, TogglesTabBtn, PlayerTabBtn) end)
 TogglesTabBtn.MouseButton1Click:Connect(function() SwitchTab(TogglesList, TogglesTabBtn, ScriptsTabBtn, PlayerTabBtn) end)
 PlayerTabBtn.MouseButton1Click:Connect(function() SwitchTab(PlayerList, PlayerTabBtn, ScriptsTabBtn, TogglesTabBtn) end)
-
 local function CreateButton(parentList, name, callback)
 local Btn = Instance.new("TextButton")
 Btn.Parent = parentList Btn.BackgroundColor3 = Color3.fromRGB(28, 28, 28) Btn.Size = UDim2.new(1, -10, 0, 38) Btn.Font = Enum.Font.GothamBold Btn.Text = name Btn.TextColor3 = Color3.fromRGB(240, 240, 240) Btn.TextSize = 12
 StyleElement(Btn, 6, Color3.fromRGB(38, 38, 38))
 Btn.MouseButton1Click:Connect(callback) return Btn
 end
+
 local function CreateToggle(parentList, name, callback)
 local ToggleBtn = Instance.new("TextButton") local enabled = false
 ToggleBtn.Parent = parentList ToggleBtn.BackgroundColor3 = Color3.fromRGB(45, 25, 25) ToggleBtn.Size = UDim2.new(1, -10, 0, 38) ToggleBtn.Font = Enum.Font.GothamBold ToggleBtn.Text = name .. " : OFF" ToggleBtn.TextColor3 = Color3.fromRGB(240, 240, 240) ToggleBtn.TextSize = 12
 StyleElement(ToggleBtn, 6)
 ToggleBtn.MouseButton1Click:Connect(function() enabled = not enabled ToggleBtn.BackgroundColor3 = enabled and Color3.fromRGB(25, 45, 25) or Color3.fromRGB(45, 25, 25) ToggleBtn.Text = name .. (enabled and " : ON" or " : OFF") callback(enabled) end)
 return ToggleBtn
+end
+-- NEW: Core Custom UI Block Engine Component For Sliders/Val Inputs Alongside Toggles
+local function CreateCustomValueSlider(parentList, labelName, defaultVal, callback)
+local Container = Instance.new("Frame")
+Container.Parent = parentList Container.BackgroundColor3 = Color3.fromRGB(22, 22, 22) Container.Size = UDim2.new(1, -10, 0, 42) StyleElement(Container, 6, Color3.fromRGB(35, 35, 35))
+local Label = Instance.new("TextLabel", Container)
+Label.BackgroundTransparency = 1 Label.Position = UDim2.new(0.04, 0, 0, 0) Label.Size = UDim2.new(0.5, 0, 1, 0) Label.Font = Enum.Font.GothamBold Label.Text = labelName Label.TextColor3 = Color3.fromRGB(200, 200, 200) Label.TextSize = 12 Label.TextXAlignment = Enum.TextXAlignment.Left
+local ValueInput = Instance.new("TextBox", Container)
+ValueInput.BackgroundColor3 = Color3.fromRGB(32, 32, 32) ValueInput.Position = UDim2.new(0.65, 0, 0.15, 0) ValueInput.Size = UDim2.new(0, 120, 0, 28) ValueInput.Font = Enum.Font.GothamBold ValueInput.Text = tostring(defaultVal) ValueInput.TextColor3 = Color3.fromRGB(0, 170, 255) ValueInput.TextSize = 12 StyleElement(ValueInput, 4, Color3.fromRGB(50, 50, 50))
+ValueInput.FocusLost:Connect(function()
+local num = tonumber(ValueInput.Text)
+if num then callback(num) else ValueInput.Text = tostring(defaultVal) end
+end)
 end
 local function RunAnimationLoop(offsetCFrame)
 if BangLoop then BangLoop:Disconnect() end
@@ -319,11 +358,14 @@ end
 end
 
 -- ==========================================
--- BUTTONS & TOGGLES GENERATION
+-- TAB 1 BUTTONS GENERATION
 -- ==========================================
 CreateButton(ScriptsList, "SKY GLITCHER (FE)", function() loadstring(game:HttpGet("https://rawscripts.net"))() end)
 CreateButton(ScriptsList, "EMOTE", function() loadstring(game:HttpGet("https://githubusercontent.com"))() end)
 CreateButton(ScriptsList, "SERVER HOP", function() loadstring(game:HttpGet("https://pastebin.com"))() end)
+-- ==========================================
+-- TAB 2 ADVANCED UTILITY ENGINE (NEW REQS FIXED)
+-- ==========================================
 CreateToggle(TogglesList, "ADVANCE NOCLIP", function(v) Toggles.Noclip = v end)
 game:GetService("RunService").Stepped:Connect(function()
 if Toggles.Noclip and game.Players.LocalPlayer.Character then
@@ -344,17 +386,83 @@ CreateToggle(TogglesList, "ANTIFLING", function(v) Toggles.AntiFling = v end)
 game:GetService("RunService").Heartbeat:Connect(function()
 local p1 = game.Players.LocalPlayer.Character if Toggles.AntiFling and p1 and p1:FindFirstChild("HumanoidRootPart") then for _, part in pairs(p1:GetDescendants()) do if part:IsA("BasePart") then part.Velocity, part.RotVelocity = Vector3.new(0, 0, 0), Vector3.new(0, 0, 0) end end end
 end)
-CreateButton(PlayerList, "BANG", function() if TargetPlayerName ~= "" then RunAnimationLoop(CFrame.new(0, 0, 1.2)) end end)
--- FIXED: MouthBang native direction loop vector angle fix
-CreateButton(PlayerList, "MOUTH BANG", function()
-if TargetPlayerName ~= "" then
-RunAnimationLoop(CFrame.new(0, -0.8, -1.1) * CFrame.Angles(0, math.rad(180), 0))
+-- NEW: Stable Loop Engine Component For Fly Tool
+CreateToggle(TogglesList, "FLY", function(v)
+Toggles.Fly = v
+local lp = game.Players.LocalPlayer
+local char = lp.Character
+if char and char:FindFirstChild("Humanoid") then
+if v then char.Humanoid.PlatformStand = true else char.Humanoid.PlatformStand = false end
 end
 end)
+game:GetService("RunService").Heartbeat:Connect(function()
+local char = game.Players.LocalPlayer.Character
+if Toggles.Fly and char and char:FindFirstChild("HumanoidRootPart") then
+char.HumanoidRootPart.Velocity = Vector3.new(0, 2, 0) -- Hover velocity structure vector field
+end
+end)
+-- NEW: Infinite Jump Native Core Hook Engine Component
+CreateToggle(TogglesList, "INFINITE JUMP", function(v) Toggles.InfJump = v end)
+game:GetService("UserInputService").JumpRequest:Connect(function()
+if Toggles.InfJump and game.Players.LocalPlayer.Character and game.Players.LocalPlayer.Character:FindFirstChildOfClass("Humanoid") then
+game.Players.LocalPlayer.Character:FindFirstChildOfClass("Humanoid"):ChangeState("Jumping")
+end
+end)
+
+-- NEW: Instant Server Rejoin Script Engine Core Component
+CreateButton(TogglesList, "REJOIN SERVER", function()
+game:GetService("TeleportService"):Teleport(game.PlaceId, game.Players.LocalPlayer)
+end)
+-- NEW: Clean Client Character Invisible Engine Hook Component
+CreateButton(TogglesList, "INVISIBLE (FE)", function()
+local player = game.Players.LocalPlayer
+local character = player.Character
+if character and character:FindFirstChild("LowerTorso") then
+character.LowerTorso:Destroy() -- Safe network replication breaker method logic
+end
+end)
+-- NEW: Advanced Custom Live Adjustable Input Config System Block Modules
+CreateCustomValueSlider(TogglesList, "⚡ CUSTOM WALKSPEED", 16, function(val)
+CustomWalkSpeed = val
+if game.Players.LocalPlayer.Character and game.Players.LocalPlayer.Character:FindFirstChild("Humanoid") then
+game.Players.LocalPlayer.Character.Humanoid.WalkSpeed = val
+end
+end)
+CreateCustomValueSlider(TogglesList, "🚀 CUSTOM JUMPPOWER", 50, function(val)
+CustomJumpPower = val
+if game.Players.LocalPlayer.Character and game.Players.LocalPlayer.Character:FindFirstChild("Humanoid") then
+game.Players.LocalPlayer.Character.Humanoid.JumpPower = val
+end
+end)
+CreateToggle(TogglesList, "SPIN CHARACTER", function(v)
+Toggles.Spin = v
+local hrp = game.Players.LocalPlayer.Character and game.Players.LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+if not v and SpinObj then SpinObj:Destroy() SpinObj = nil end
+end)
+game:GetService("RunService").Heartbeat:Connect(function()
+local hrp = game.Players.LocalPlayer.Character and game.Players.LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+if Toggles.Spin and hrp then
+if not SpinObj or SpinObj.Parent ~= hrp then
+if SpinObj then SpinObj:Destroy() end
+SpinObj = Instance.new("BodyAngularVelocity")
+SpinObj.Name = "HubSpin"
+SpinObj.MaxTorque = Vector3.new(0, math.huge, 0)
+SpinObj.Parent = hrp
+end
+SpinObj.AngularVelocity = Vector3.new(0, CustomSpinSpeed, 0)
+end
+end)
+CreateCustomValueSlider(TogglesList, "🌀 CUSTOM SPIN SPEED", 50, function(val)
+CustomSpinSpeed = val
+end)
+-- ==========================================
+-- TAB 3 BUTTONS GENERATION
+-- ==========================================
+CreateButton(PlayerList, "BANG", function() if TargetPlayerName ~= "" then RunAnimationLoop(CFrame.new(0, 0, 1.2)) end end)
+CreateButton(PlayerList, "MOUTH BANG", function() if TargetPlayerName ~= "" then RunAnimationLoop(CFrame.new(0, -0.8, -1.1) * CFrame.Angles(0, math.rad(180), 0)) end end)
 CreateButton(PlayerList, "PLAYER BACKSIT", function()
 local tp = game.Players:FindFirstChild(TargetPlayerName) if TargetPlayerName ~= "" and tp and tp.Character and tp.Character:FindFirstChild("HumanoidRootPart") then game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = tp.Character.HumanoidRootPart.CFrame * CFrame.new(0, 1.5, 0.2) end
 end)
--- FIXED: Accurate HeadSit loop tracking with clean upright global angles orientation
 CreateButton(PlayerList, "PLAYER HEADSIT", function()
 if HeadSitLoop then HeadSitLoop:Disconnect() end
 local p1 = game.Players.LocalPlayer.Character
@@ -363,9 +471,7 @@ if TargetPlayerName ~= "" and p1 and p2 and p1:FindFirstChild("HumanoidRootPart"
 HeadSitLoop = game:GetService("RunService").Heartbeat:Connect(function()
 if p1 and p2 and p2:FindFirstChild("Head") and p1:FindFirstChild("HumanoidRootPart") then
 p1.HumanoidRootPart.CFrame = CFrame.new((p2.Head.CFrame * CFrame.new(0, 1.25, 0)).Position) * CFrame.Angles(0, math.rad(p2.Head.Orientation.Y), 0)
-else
-if HeadSitLoop then HeadSitLoop:Disconnect() end
-end
+else if HeadSitLoop then HeadSitLoop:Disconnect() end end
 end)
 end
 end)
