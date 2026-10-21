@@ -1,5 +1,5 @@
 -- ==========================================================
--- AYAN HUB v1 (100% FIXED & TESTED PRODUCTION)
+-- AYAN HUB v1 (PLAYER LIST & HEADSIT UPDATE)
 -- Password is: ATB
 -- ==========================================================
 
@@ -30,6 +30,7 @@ local UIListLayout3 = Instance.new("UIListLayout")
 local Toggles = { Noclip = false, ESP = false, Custom1 = false, Custom2 = false }
 local TargetPlayerName = "" 
 local BangLoop = nil
+local HeadSitLoop = nil
 
 -- UI Setup
 ScreenGui.Parent = game.CoreGui
@@ -97,6 +98,7 @@ CloseBtnHub.TextColor3 = Color3.fromRGB(255, 255, 255)
 CloseBtnHub.TextSize = 24.000
 CloseBtnHub.MouseButton1Click:Connect(function()
     if BangLoop then BangLoop:Disconnect() end
+    if HeadSitLoop then HeadSitLoop:Disconnect() end
     ScreenGui:Destroy()
 end)
 
@@ -156,53 +158,74 @@ ScriptsList.CanvasSize = UDim2.new(0, 0, 4.5, 0)
 TogglesList = CreateScrollList("TogglesList", false)
 TogglesList.CanvasSize = UDim2.new(0, 0, 1.8, 0)
 
+-- Tab 3 Size Adjustments for Player List Placement
 PlayerList = CreateScrollList("PlayerList", false)
-PlayerList.Position = UDim2.new(0.03, 0, 0.33, 0) 
-PlayerList.Size = UDim2.new(0, 430, 0, 250)
+PlayerList.Position = UDim2.new(0.03, 0, 0.52, 0) -- Pushed down to clear room for lists
+PlayerList.Size = UDim2.new(0, 430, 0, 175)
 PlayerList.CanvasSize = UDim2.new(0, 0, 1.5, 0)
 
 UIListLayout1.Parent = ScriptsList; UIListLayout1.SortOrder = Enum.SortOrder.LayoutOrder; UIListLayout1.Padding = UDim.new(0, 6)
 UIListLayout2.Parent = TogglesList; UIListLayout2.SortOrder = Enum.SortOrder.LayoutOrder; UIListLayout2.Padding = UDim.new(0, 6)
 UIListLayout3.Parent = PlayerList; UIListLayout3.SortOrder = Enum.SortOrder.LayoutOrder; UIListLayout3.Padding = UDim.new(0, 6)
 
--- SEARCH PLAYER NAME BOX
-local SearchPlayerBox = Instance.new("TextBox")
-SearchPlayerBox.Name = "SearchPlayerBox"
-SearchPlayerBox.Parent = MainHub
-SearchPlayerBox.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
-SearchPlayerBox.Position = UDim2.new(0.03, 0, 0.23, 0)
-SearchPlayerBox.Size = UDim2.new(0, 430, 0, 35)
-SearchPlayerBox.Font = Enum.Font.SourceSansBold
-SearchPlayerBox.PlaceholderText = "🔍 Type Player Name Here..."
-SearchPlayerBox.Text = ""
-SearchPlayerBox.TextColor3 = Color3.fromRGB(255, 255, 255)
-SearchPlayerBox.TextSize = 16.000
-SearchPlayerBox.Visible = false
+-- DYNAMIC LIVE PLAYER DROPDOWN LIST (TAB 3 HEADER ENGINE)
+local PlayerDropdown = Instance.new("ScrollingFrame")
+PlayerDropdown.Name = "PlayerDropdown"
+PlayerDropdown.Parent = MainHub
+PlayerDropdown.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+PlayerDropdown.Position = UDim2.new(0.03, 0, 0.23, 0)
+PlayerDropdown.Size = UDim2.new(0, 430, 0, 100)
+PlayerDropdown.CanvasSize = UDim2.new(0, 0, 4, 0)
+PlayerDropdown.ScrollBarThickness = 6
+PlayerDropdown.Visible = false
 
--- FUNCTIONALITY INTERACTION LOGIC
+local DropdownLayout = Instance.new("UIListLayout")
+DropdownLayout.Parent = PlayerDropdown
+DropdownLayout.SortOrder = Enum.SortOrder.LayoutOrder
+DropdownLayout.Padding = UDim.new(0, 4)
 
--- Password Verification Action
-SubmitBtn.MouseButton1Click:Connect(function()
-    if PasswordInput.Text == "ATB" then
-        PasswordFrame.Visible = false
-        MainHub.Visible = true
-    else
-        PasswordInput.Text = ""
-        PasswordInput.PlaceholderText = "Wrong Password! Try Again."
-        PasswordInput.PlaceholderColor3 = Color3.fromRGB(255, 0, 0)
+-- Refresh Player List Items inside Dropdown Menu
+local function RefreshPlayerDropdown()
+    for _, child in pairs(PlayerDropdown:GetChildren()) do
+        if child:IsA("TextButton") then child:Destroy() end
     end
-end)
+    for _, player in pairs(game.Players:GetPlayers()) do
+        if player ~= game.Players.LocalPlayer then
+            local PBtn = Instance.new("TextButton")
+            PBtn.Parent = PlayerDropdown
+            PBtn.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+            PBtn.Size = UDim2.new(1, -8, 0, 25)
+            PBtn.Font = Enum.Font.SourceSansBold
+            PBtn.Text = "  " .. player.DisplayName .. " (@" .. player.Name .. ")"
+            PBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+            PBtn.TextSize = 14.000
+            PBtn.TextXAlignment = Enum.TextXAlignment.Left
+            
+            PBtn.MouseButton1Click:Connect(function()
+                TargetPlayerName = player.Name
+                for _, b in pairs(PlayerDropdown:GetChildren()) do
+                    if b:IsA("TextButton") then b.TextColor3 = Color3.fromRGB(255, 255, 255) end
+                end
+                PBtn.TextColor3 = Color3.fromRGB(0, 170, 255) -- Selected element glows blue
+            end)
+        end
+    end
+end
 
--- Tab Navigation Swapper System
+game.Players.PlayerAdded:Connect(RefreshPlayerDropdown)
+game.Players.PlayerRemoving:Connect(RefreshPlayerDropdown)
+
+-- Tab Switching Logic
 local function SwitchTab(activeList, activeBtn, inactiveBtn1, inactiveBtn2)
     ScriptsList.Visible = (ScriptsList == activeList)
     TogglesList.Visible = (TogglesList == activeList)
     PlayerList.Visible = (PlayerList == activeList)
-    SearchPlayerBox.Visible = (PlayerList == activeList)
+    PlayerDropdown.Visible = (PlayerList == activeList)
+    
+    if PlayerList == activeList then RefreshPlayerDropdown() end
     
     activeBtn.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
     activeBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
-    
     inactiveBtn1.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
     inactiveBtn1.TextColor3 = Color3.fromRGB(180, 180, 180)
     inactiveBtn2.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
@@ -212,22 +235,6 @@ end
 ScriptsTabBtn.MouseButton1Click:Connect(function() SwitchTab(ScriptsList, ScriptsTabBtn, TogglesTabBtn, PlayerTabBtn) end)
 TogglesTabBtn.MouseButton1Click:Connect(function() SwitchTab(TogglesList, TogglesTabBtn, ScriptsTabBtn, PlayerTabBtn) end)
 PlayerTabBtn.MouseButton1Click:Connect(function() SwitchTab(PlayerList, PlayerTabBtn, ScriptsTabBtn, TogglesTabBtn) end)
-
--- Live Autocomplete Filter for Player Search Bar
-SearchPlayerBox:GetPropertyChangedSignal("Text"):Connect(function()
-    local text = string.lower(SearchPlayerBox.Text)
-    TargetPlayerName = ""
-    for _, player in pairs(game.Players:GetPlayers()) do
-        if string.find(string.lower(player.Name), text) or string.find(string.lower(player.DisplayName), text) then
-            TargetPlayerName = player.Name
-            SearchPlayerBox.TextColor3 = Color3.fromRGB(0, 255, 100)
-            break
-        end
-    end
-    if SearchPlayerBox.Text == "" then
-        SearchPlayerBox.TextColor3 = Color3.fromRGB(255, 255, 255)
-    end
-end)
 
 -- Core Generators for Buttons and Toggles
 local function CreateButton(parentList, name, callback)
@@ -246,24 +253,21 @@ end
 local function CreateToggle(parentList, name, callback)
     local ToggleBtn = Instance.new("TextButton")
     local enabled = false
-    ToggleBtn.Parent = parentList
-    ToggleBtn.BackgroundColor3 = Color3.fromRGB(60, 30, 30)
-    ToggleBtn.Size = UDim2.new(1, -10, 0, 40)
-    ToggleBtn.Font = Enum.Font.SourceSansBold
-    ToggleBtn.Text = name .. " : OFF"
-    ToggleBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
-    ToggleBtn.TextSize = 16.000
-    
-        ToggleBtn.MouseButton1Click:Connect(function()
-        enabled = not enabled
-        ToggleBtn.BackgroundColor3 = enabled and Color3.fromRGB(30, 100, 30) or Color3.fromRGB(60, 30, 30)
-        ToggleBtn.Text = name .. (enabled and " : ON" or " : OFF")
+ToggleBtn.Parent = parentList
+ToggleBtn.BackgroundColor3 = Color3.fromRGB(60, 30, 30)
+ToggleBtn.Size = UDim2.new(1, -10, 0, 40)
+ToggleBtn.Font = Enum.Font.SourceSansBold
+ToggleBtn.Text = name .. " : OFF"
+ToggleBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+ToggleBtn.TextSize = 16.000
+ToggleBtn.MouseButton1Click:Connect(function()
+enabled = not enabled
+ToggleBtn.BackgroundColor3 = enabled and Color3.fromRGB(30, 100, 30) or Color3.fromRGB(60, 30, 30)
+ToggleBtn.Text = name .. (enabled and " : ON" or " : OFF")
 callback(enabled)
 end)
 return ToggleBtn
 end
-
-
 -- Fixed Built-in Custom Target Loop Engine
 local function RunAnimationLoop(offsetCFrame)
 if BangLoop then BangLoop:Disconnect() end
@@ -297,13 +301,10 @@ CreateButton(ScriptsList, "SERVER HOP", function() loadstring(game:HttpGet("http
 for i = 1, 10 do
 CreateButton(ScriptsList, "Soon...", function() loadstring(game:HttpGet("pastebin.com_" .. i))() end)
 end
-
 -- ==========================================
 -- TAB 2: TOGGLES SECTION (ON/OFF)
 -- ==========================================
-CreateToggle(TogglesList, "ADVANCE NOCLIP", function(value)
-Toggles.Noclip = value
-end)
+CreateToggle(TogglesList, "ADVANCE NOCLIP", function(value) Toggles.Noclip = value end)
 game:GetService("RunService").Stepped:Connect(function()
 if Toggles.Noclip and game.Players.LocalPlayer.Character then
 for _, part in pairs(game.Players.LocalPlayer.Character:GetDescendants()) do
@@ -336,18 +337,15 @@ end
 end)
 CreateToggle(TogglesList, "Toggle Soon 1", function(value) Toggles.Custom1 = value end)
 CreateToggle(TogglesList, "Toggle Soon 2", function(value) Toggles.Custom2 = value end)
+
 -- ==========================================
 -- TAB 3: PLAYER TARGET SECTION
 -- ==========================================
 CreateButton(PlayerList, "BANG", function()
-if TargetPlayerName ~= "" then
-RunAnimationLoop(CFrame.new(0, 0, 1.2))
-end
+if TargetPlayerName ~= "" then RunAnimationLoop(CFrame.new(0, 0, 1.2)) end
 end)
 CreateButton(PlayerList, "MOUTH BANG", function()
-if TargetPlayerName ~= "" then
-RunAnimationLoop(CFrame.new(0, -0.6, -1.2) * CFrame.Angles(0, math.rad(180), 0))
-end
+if TargetPlayerName ~= "" then RunAnimationLoop(CFrame.new(0, -0.6, -1.2) * CFrame.Angles(0, math.rad(180), 0)) end
 end)
 CreateButton(PlayerList, "PLAYER BACKSIT", function()
 if TargetPlayerName ~= "" then
@@ -357,9 +355,24 @@ game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = targetPlayer.Charac
 end
 end
 end)
-CreateButton(PlayerList, "❌ STOP ANIMATION", function()
-if BangLoop then
-BangLoop:Disconnect()
-BangLoop = nil
+-- NEW HEADSIT IMPLEMENTATION (NATIVE HIGH FREQUENCY TRACKING)
+CreateButton(PlayerList, "PLAYER HEADSIT", function()
+if HeadSitLoop then HeadSitLoop:Disconnect() end
+if TargetPlayerName ~= "" then
+local p1 = game.Players.LocalPlayer.Character
+local p2 = game.Workspace:FindFirstChild(TargetPlayerName)
+if p1 and p2 and p1:FindFirstChild("HumanoidRootPart") and p2:FindFirstChild("Head") then
+HeadSitLoop = game:GetService("RunService").Heartbeat:Connect(function()
+if p1 and p2 and p2:FindFirstChild("Head") and p1:FindFirstChild("HumanoidRootPart") then
+p1.HumanoidRootPart.CFrame = p2.Head.CFrame * CFrame.new(0, 1.3, 0)
+else
+if HeadSitLoop then HeadSitLoop:Disconnect() end
 end
+end)
+end
+end
+end)
+CreateButton(PlayerList, "❌ STOP ANIMATION", function()
+if BangLoop then BangLoop:Disconnect(); BangLoop = nil end
+if HeadSitLoop then HeadSitLoop:Disconnect(); HeadSitLoop = nil end
 end)
