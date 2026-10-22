@@ -1,5 +1,5 @@
 -- ==========================================================
--- AYAN HUB v1 (TAB 4 SPAMMER & MOBILE FLY + FLING FIX)
+-- AYAN HUB v2 (ULTIMATE MASSIVE TOXIC LIST DEPLOYED)
 -- Password is: ATB
 -- ==========================================================
 local ScreenGui = Instance.new("ScreenGui")
@@ -18,18 +18,28 @@ local ScriptsTabBtn, TogglesTabBtn, PlayerTabBtn, SpammerTabBtn = Instance.new("
 local ScriptsList, TogglesList, PlayerList, SpammerList = Instance.new("ScrollingFrame"), Instance.new("ScrollingFrame"), Instance.new("ScrollingFrame"), Instance.new("ScrollingFrame")
 local UIListLayout1, UIListLayout2, UIListLayout3, UIListLayout4 = Instance.new("UIListLayout"), Instance.new("UIListLayout"), Instance.new("UIListLayout"), Instance.new("UIListLayout")
 
-local Toggles = { Noclip = false, ESP = false, WalkFling = false, AntiFling = false, Fly = false, InfJump = false, Spin = false, Invisible = false, Spammer = false }
+local Toggles = { Noclip = false, ESP = false, WalkFling = false, AntiFling = false, Fly = false, InfJump = false, Spin = false, Invisible = false, Spammer = false, AntiAFK = false }
 local TargetPlayerName, BangLoop, HeadSitLoop, SpamLoop = "", nil, nil, nil
 
--- State variables for Custom Sliders/Inputs
+-- State variables for Custom Sliders/Inputs/Modes
 local CustomWalkSpeed, CustomJumpPower, CustomSpinSpeed = 16, 50, 50
-local SpinObj, InvisibleClone, SpamText, SpamDelay = nil, nil, "AYAN HUB ON TOP!", 2.4
+local SpinObj, InvisibleClone, SpamText, SpamDelay = nil, nil, "", 2.4
+local SpammerSpeedMode = "SLOW" -- FAST or SLOW
 
--- UI State Elements
+-- Anti-AFK Tracker State Elements
+local AFKConnection, AFKTimerLoop = nil, nil
+local TotalBypassesCount = 0
+local AFKStartTime = 0
+
+-- UI Tracking Objects
 local TargetPanelMinimized = false
 local MinimizePlayerListBtn = Instance.new("TextButton")
 local TargetNameLabel = Instance.new("TextLabel")
 local PlayerSearchBar = Instance.new("TextBox")
+
+-- 10 Target Slots Storage
+local TargetSlotsInputs = {}
+local TargetNamesList = {"", "", "", "", "", "", "", "", "", ""}
 
 ScreenGui.Parent = game.CoreGui
 ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
@@ -96,7 +106,7 @@ Title.Parent = MainHub
 Title.BackgroundColor3 = Color3.fromRGB(22, 22, 22)
 Title.Size = UDim2.new(1, 0, 0, 42)
 Title.Font = Enum.Font.GothamBold
-Title.Text = "   AYAN HUB v1  //  PRIVATE"
+Title.Text = "   AYAN HUB v2  //  PRIVATE"
 Title.TextColor3 = Color3.fromRGB(0, 170, 255)
 Title.TextSize = 14
 Title.TextXAlignment = Enum.TextXAlignment.Left
@@ -182,7 +192,7 @@ end
 
 ScriptsList = CreateScrollList("ScriptsList", true, UDim2.new(0.03, 0, 0.24, 0), UDim2.new(0, 432, 0, 285), UDim2.new(0, 0, 4.5, 0))
 TogglesList = CreateScrollList("TogglesList", false, UDim2.new(0.03, 0, 0.24, 0), UDim2.new(0, 432, 0, 285), UDim2.new(0, 0, 4.5, 0))
-SpammerList = CreateScrollList("SpammerList", false, UDim2.new(0.03, 0, 0.24, 0), UDim2.new(0, 432, 0, 285), UDim2.new(0, 0, 2.0, 0))
+SpammerList = CreateScrollList("SpammerList", false, UDim2.new(0.03, 0, 0.24, 0), UDim2.new(0, 432, 0, 285), UDim2.new(0, 0, 3.2, 0))
 
 PlayerSearchBar.Name = "PlayerSearchBar"
 PlayerSearchBar.Parent = MainHub
@@ -216,7 +226,7 @@ TargetNameLabel.Visible = false
 MinimizePlayerListBtn.Name = "MinimizePlayerListBtn"
 MinimizePlayerListBtn.Parent = MainHub
 MinimizePlayerListBtn.BackgroundColor3 = Color3.fromRGB(24, 24, 24)
-MinimizePlayerListBtn.Position = UDim2.new(0.90, 0, 0.545, 0)
+MinimizePlayerListBtn.Position = UDim2.new(0.90, 0, 0.485, 0)
 MinimizePlayerListBtn.Size = UDim2.new(0, 38, 0, 18)
 MinimizePlayerListBtn.Font = Enum.Font.GothamBold
 MinimizePlayerListBtn.Text = "^"
@@ -224,11 +234,9 @@ MinimizePlayerListBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
 MinimizePlayerListBtn.TextSize = 12
 StyleElement(MinimizePlayerListBtn, 4, Color3.fromRGB(45, 45, 45))
 MinimizePlayerListBtn.Visible = false
-
 PlayerList = CreateScrollList("PlayerList", false, UDim2.new(0.03, 0, 0.60, 0), UDim2.new(0, 432, 0, 140), UDim2.new(0, 0, 2.2, 0))
-
 local function ApplyLayout(layout, parent)
-    layout.Parent = parent layout.SortOrder = Enum.SortOrder.LayoutOrder layout.Padding = UDim.new(0, 6)
+layout.Parent = parent layout.SortOrder = Enum.SortOrder.LayoutOrder layout.Padding = UDim.new(0, 6)
 end
 ApplyLayout(UIListLayout1, ScriptsList)
 ApplyLayout(UIListLayout2, TogglesList)
@@ -289,7 +297,8 @@ MinimizeBtnHub.MouseButton1Click:Connect(function() MainHub.Visible = false Open
 OpenIconBtn.MouseButton1Click:Connect(function() OpenIconBtn.Visible = false MainHub.Visible = true end)
 CloseBtnHub.MouseButton1Click:Connect(function()
 if BangLoop then BangLoop:Disconnect() end if HeadSitLoop then HeadSitLoop:Disconnect() end if SpamLoop then SpamLoop:Disconnect() end
-Toggles.ESP = false Toggles.Spin = false Toggles.Fly = false Toggles.InfJump = false Toggles.WalkFling = false Toggles.Invisible = false task.wait(0.1)
+if AFKConnection then AFKConnection:Disconnect() end if AFKTimerLoop then AFKTimerLoop:Disconnect() end
+Toggles.ESP = false Toggles.Spin = false Toggles.Fly = false Toggles.InfJump = false Toggles.WalkFling = false Toggles.Invisible = false Toggles.Spammer = false Toggles.AntiAFK = false task.wait(0.1)
 if SpinObj then SpinObj:Destroy() end
 if InvisibleClone then InvisibleClone:Destroy() end
 for _, p in pairs(game.Players:GetPlayers()) do if p.Character and p.Character:FindFirstChild("HubESP") then p.Character.HubESP:Destroy() end end
@@ -361,7 +370,6 @@ else if BangLoop then BangLoop:Disconnect() end end
 end)
 end
 end
-
 -- ==========================================
 -- TAB 1 BUTTONS GENERATION
 -- ==========================================
@@ -369,7 +377,7 @@ CreateButton(ScriptsList, "SKY GLITCHER (FE)", function() loadstring(game:HttpGe
 CreateButton(ScriptsList, "EMOTE", function() loadstring(game:HttpGet("https://githubusercontent.com"))() end)
 CreateButton(ScriptsList, "SERVER HOP", function() loadstring(game:HttpGet("https://pastebin.com"))() end)
 -- ==========================================
--- TAB 2 UTILITY (UPGRADED MOBILE ENGINE)
+-- TAB 2 UTILITY (UPGRADED CORE FLING ENGINE)
 -- ==========================================
 CreateToggle(TogglesList, "ADVANCE NOCLIP", function(v) Toggles.Noclip = v end)
 game:GetService("RunService").Stepped:Connect(function()
@@ -377,98 +385,51 @@ if Toggles.Noclip and game.Players.LocalPlayer.Character then
 for _, part in pairs(game.Players.LocalPlayer.Character:GetDescendants()) do if part:IsA("BasePart") then part.CanCollide = false end end
 end
 end)
+
 CreateToggle(TogglesList, "ESP (ALL PLAYERS)", function(v)
 Toggles.ESP = v if not v then for _, p in pairs(game.Players:GetPlayers()) do if p.Character and p.Character:FindFirstChild("HubESP") then p.Character.HubESP:Destroy() end end end
 end)
 task.spawn(function()
 while task.wait(0.5) do if Toggles.ESP then for _, p in pairs(game.Players:GetPlayers()) do if p ~= game.Players.LocalPlayer and p.Character and p.Character:FindFirstChild("HumanoidRootPart") and not p.Character:FindFirstChild("HubESP") then local Box = Instance.new("Highlight") Box.Name = "HubESP" Box.Parent = p.Character Box.FillColor, Box.OutlineColor = Color3.fromRGB(0, 170, 255), Color3.fromRGB(255, 255, 255) end end end end
 end)
--- FIXED WALKFLING: High anti-torque balance field. No self-fling, only targets fling.
 CreateToggle(TogglesList, "WALKFLING", function(v) Toggles.WalkFling = v end)
 game:GetService("RunService").Heartbeat:Connect(function()
 local char = game.Players.LocalPlayer.Character
 if Toggles.WalkFling and char and char:FindFirstChild("HumanoidRootPart") then
-for _, part in pairs(char:GetDescendants()) do
-if part:IsA("BasePart") then part.CanCollide = false end
-end
+for _, part in pairs(char:GetDescendants()) do if part:IsA("BasePart") then part.CanCollide = false end end
 char.HumanoidRootPart.Velocity = Vector3.new(0, 0, 0)
-char.HumanoidRootPart.RotVelocity = Vector3.new(0, 35000, 0) -- High spin velocity engine bypass
+char.HumanoidRootPart.RotVelocity = Vector3.new(0, 35000, 0)
 end
 end)
 CreateToggle(TogglesList, "ANTIFLING", function(v) Toggles.AntiFling = v end)
 game:GetService("RunService").Heartbeat:Connect(function()
 local p1 = game.Players.LocalPlayer.Character if Toggles.AntiFling and p1 and p1:FindFirstChild("HumanoidRootPart") then for _, part in pairs(p1:GetDescendants()) do if part:IsA("BasePart") then part.Velocity, part.RotVelocity = Vector3.new(0, 0, 0), Vector3.new(0, 0, 0) end end end
 end)
--- MOBILE SMOOTH FLY ENGINE
 CreateToggle(TogglesList, "FLY", function(v)
-Toggles.Fly = v
-local lp = game.Players.LocalPlayer
-local char = lp.Character
-if char and char:FindFirstChild("Humanoid") then
-char.Humanoid.PlatformStand = v
-end
+Toggles.Fly = v local lp = game.Players.LocalPlayer local char = lp.Character if char and char:FindFirstChild("Humanoid") then char.Humanoid.PlatformStand = v end
 end)
 game:GetService("RunService").Heartbeat:Connect(function()
 local char = game.Players.LocalPlayer.Character
 if Toggles.Fly and char and char:FindFirstChild("HumanoidRootPart") then
-local cam = workspace.CurrentCamera
-local moveDir = char.Humanoid.MoveDirection
--- Mobile touch vector adapter field configuration
-if moveDir.Magnitude > 0 then
-char.HumanoidRootPart.Velocity = moveDir * 70
-else
-char.HumanoidRootPart.Velocity = Vector3.new(0, 0.1, 0) -- Pure stable floating anchor bypass
-end
+local moveDir = char.Humanoid.MoveDirection if moveDir.Magnitude > 0 then char.HumanoidRootPart.Velocity = moveDir * 70 else char.HumanoidRootPart.Velocity = Vector3.new(0, 0.1, 0) end
 end
 end)
-
 CreateToggle(TogglesList, "INFINITE JUMP", function(v) Toggles.InfJump = v end)
 game:GetService("UserInputService").JumpRequest:Connect(function()
-if Toggles.InfJump and game.Players.LocalPlayer.Character and game.Players.LocalPlayer.Character:FindFirstChildOfClass("Humanoid") then
-game.Players.LocalPlayer.Character:FindFirstChildOfClass("Humanoid"):ChangeState("Jumping")
-end
+if Toggles.InfJump and game.Players.LocalPlayer.Character and game.Players.LocalPlayer.Character:FindFirstChildOfClass("Humanoid") then game.Players.LocalPlayer.Character:FindFirstChildOfClass("Humanoid"):ChangeState("Jumping") end
 end)
-CreateButton(TogglesList, "REJOIN SERVER", function()
-game:GetService("TeleportService"):Teleport(game.PlaceId, game.Players.LocalPlayer)
-end)
--- UPDATED INVISIBLE (ON/OFF TOGGLE HOOK)
+CreateButton(TogglesList, "REJOIN SERVER", function() game:GetService("TeleportService"):Teleport(game.PlaceId, game.Players.LocalPlayer) end)
 CreateToggle(TogglesList, "INVISIBLE (FE)", function(v)
-Toggles.Invisible = v
-local player = game.Players.LocalPlayer
-local character = player.Character
-if v then
-if character and character:FindFirstChild("LowerTorso") then
-InvisibleClone = character.LowerTorso:Clone()
-character.LowerTorso:Destroy() -- Break replication path state cleanly
-end
-else
-if InvisibleClone and character then
-game:GetService("TeleportService"):Teleport(game.PlaceId, player) -- Safely revert state machine via rejoin sync
-end
-end
+Toggles.Invisible = v local player = game.Players.LocalPlayer local character = player.Character
+if v then if character and character:FindFirstChild("LowerTorso") then InvisibleClone = character.LowerTorso:Clone() character.LowerTorso:Destroy() end else if InvisibleClone and character then game:GetService("TeleportService"):Teleport(game.PlaceId, player) end end
 end)
-CreateCustomValueSlider(TogglesList, "⚡ CUSTOM WALKSPEED", 16, function(val)
-CustomWalkSpeed = val
-if game.Players.LocalPlayer.Character and game.Players.LocalPlayer.Character:FindFirstChild("Humanoid") then game.Players.LocalPlayer.Character.Humanoid.WalkSpeed = val end
-end)
-CreateCustomValueSlider(TogglesList, "🚀 CUSTOM JUMPPOWER", 50, function(val)
-CustomJumpPower = val
-if game.Players.LocalPlayer.Character and game.Players.LocalPlayer.Character:FindFirstChild("Humanoid") then game.Players.LocalPlayer.Character.Humanoid.JumpPower = val end
-end)
-CreateToggle(TogglesList, "SPIN CHARACTER", function(v)
-Toggles.Spin = v
-if not v and SpinObj then SpinObj:Destroy() SpinObj = nil end
-end)
+CreateCustomValueSlider(TogglesList, "⚡ CUSTOM WALKSPEED", 16, function(val) CustomWalkSpeed = val if game.Players.LocalPlayer.Character and game.Players.LocalPlayer.Character:FindFirstChild("Humanoid") then game.Players.LocalPlayer.Character.Humanoid.WalkSpeed = val end end)
+CreateCustomValueSlider(TogglesList, "🚀 CUSTOM JUMPPOWER", 50, function(val) CustomJumpPower = val if game.Players.LocalPlayer.Character and game.Players.LocalPlayer.Character:FindFirstChild("Humanoid") then game.Players.LocalPlayer.Character.Humanoid.JumpPower = val end end)
+CreateToggle(TogglesList, "SPIN CHARACTER", function(v) Toggles.Spin = v if not v and SpinObj then SpinObj:Destroy() SpinObj = nil end end)
 game:GetService("RunService").Heartbeat:Connect(function()
 local hrp = game.Players.LocalPlayer.Character and game.Players.LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
 if Toggles.Spin and hrp then
-if not SpinObj or SpinObj.Parent ~= hrp then
-if SpinObj then SpinObj:Destroy() end
-SpinObj = Instance.new("BodyAngularVelocity")
-SpinObj.Name = "HubSpin"
-SpinObj.MaxTorque = Vector3.new(0, math.huge, 0)
-SpinObj.Parent = hrp
-end
+if not SpinObj or SpinObj.Parent ~= hrp then if SpinObj then SpinObj:Destroy() end SpinObj = Instance.new("BodyAngularVelocity") SpinObj.Name = "HubSpin" SpinObj.MaxTorque = Vector3.new(0, math.huge, 0) SpinObj.Parent = hrp end
 SpinObj.AngularVelocity = Vector3.new(0, CustomSpinSpeed, 0)
 end
 end)
@@ -483,79 +444,130 @@ CreateButton(PlayerList, "PLAYER BACKSIT", function()
 local tp = game.Players:FindFirstChild(TargetPlayerName) if TargetPlayerName ~= "" and tp and tp.Character and tp.Character:FindFirstChild("HumanoidRootPart") then game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = tp.Character.HumanoidRootPart.CFrame * CFrame.new(0, 1.5, 0.2) end
 end)
 CreateButton(PlayerList, "PLAYER HEADSIT", function()
-if HeadSitLoop then HeadSitLoop:Disconnect() end
-local p1, p2 = game.Players.LocalPlayer.Character, game.Workspace:FindFirstChild(TargetPlayerName)
+if HeadSitLoop then HeadSitLoop:Disconnect() end local p1, p2 = game.Players.LocalPlayer.Character, game.Workspace:FindFirstChild(TargetPlayerName)
 if TargetPlayerName ~= "" and p1 and p2 and p1:FindFirstChild("HumanoidRootPart") and p2:FindFirstChild("Head") then
-HeadSitLoop = game:GetService("RunService").Heartbeat:Connect(function()
-if p1 and p2 and p2:FindFirstChild("Head") and p1:FindFirstChild("HumanoidRootPart") then
-p1.HumanoidRootPart.CFrame = CFrame.new((p2.Head.CFrame * CFrame.new(0, 1.25, 0)).Position) * CFrame.Angles(0, math.rad(p2.Head.Orientation.Y), 0)
-else if HeadSitLoop then HeadSitLoop:Disconnect() end end
-end)
+HeadSitLoop = game:GetService("RunService").Heartbeat:Connect(function() if p1 and p2 and p2:FindFirstChild("Head") and p1:FindFirstChild("HumanoidRootPart") then p1.HumanoidRootPart.CFrame = CFrame.new((p2.Head.CFrame * CFrame.new(0, 1.25, 0)).Position) * CFrame.Angles(0, math.rad(p2.Head.Orientation.Y), 0) else if HeadSitLoop then HeadSitLoop:Disconnect() end end end)
 end
 end)
 CreateButton(PlayerList, "❌ STOP ANIMATION", function() if BangLoop then BangLoop:Disconnect() BangLoop = nil end if HeadSitLoop then HeadSitLoop:Disconnect() HeadSitLoop = nil end end)
+-- ==========================================
+-- TAB 4: ADVANCED 10 TARGET SPAM ENGINE
+-- ==========================================
+local TargetGridContainer = Instance.new("Frame")
+TargetGridContainer.Name = "TargetGridContainer" TargetGridContainer.Parent = SpammerList TargetGridContainer.BackgroundColorTransparency = 1 TargetGridContainer.Size = UDim2.new(1, -10, 0, 180)
+local UIGridLayout = Instance.new("UIGridLayout")
+UIGridLayout.Parent = TargetGridContainer UIGridLayout.CellSize = UDim2.new(0.48, 0, 0, 30) UIGridLayout.CellPadding = UDim2.new(0.04, 0, 0, 6)
+for i = 1, 10 do
+local SlotInput = Instance.new("TextBox")
+SlotInput.Parent = TargetGridContainer SlotInput.BackgroundColor3 = Color3.fromRGB(28, 28, 28) SlotInput.Font = Enum.Font.GothamBold SlotInput.PlaceholderText = "Target " .. i .. "..." SlotInput.Text = "" SlotInput.TextColor3 = Color3.fromRGB(255, 255, 255) SlotInput.TextSize = 11 StyleElement(SlotInput, 4, Color3.fromRGB(45, 45, 45))
+SlotInput.FocusLost:Connect(function() TargetNamesList[i] = SlotInput.Text end)
+TargetSlotsInputs[i] = SlotInput
+end
+local CustomMsgInput = CreateCustomValueSlider(SpammerList, "📝 CUSTOM MESSAGE:", "", function(val) SpamText = tostring(val) end)
+local ModeSpeedBtn = Instance.new("TextButton")
+ModeSpeedBtn.Parent = SpammerList ModeSpeedBtn.BackgroundColor3 = Color3.fromRGB(0, 100, 180) ModeSpeedBtn.Size = UDim2.new(1, -10, 0, 38) ModeSpeedBtn.Font = Enum.Font.GothamBold ModeSpeedBtn.Text = "MODE: SLOW 🐢" ModeSpeedBtn.TextColor3 = Color3.fromRGB(255, 255, 255) ModeSpeedBtn.TextSize = 12 StyleElement(ModeSpeedBtn, 6)
+ModeSpeedBtn.MouseButton1Click:Connect(function()
+if SpammerSpeedMode == "SLOW" then SpammerSpeedMode = "FAST" ModeSpeedBtn.Text = "MODE: FAST ⚡" ModeSpeedBtn.BackgroundColor3 = Color3.fromRGB(220, 50, 50) SpamDelay = 0.5 else SpammerSpeedMode = "SLOW" ModeSpeedBtn.Text = "MODE: SLOW 🐢" ModeSpeedBtn.BackgroundColor3 = Color3.fromRGB(0, 100, 180) SpamDelay = 2.4 end
+end)
 
--- ==========================================
--- NEW TAB 4: NATIVE CORE SPAMMER ENGINE (UPDATED)
--- ==========================================
-local CustomSpamList = {
-    "Tmx MAI TOXIC KA AYAN😝TAP KARKE BOL AYAN PAPA OP✌🏻 🔮☄️",
-    "🔥✨ tmx GODZILA POWER SONIC BEEM UNLEASHED 100% MAXIMUM DESTRUCTION OVERLOAD 🔥✨",
-    "😝☄️ tmx SUPER ULTRA BRAZIL TIGER GORILLA PUNCH COMING THROUGH WITH UNSTOPPABLE JUNGLE FURY RAGE 😝☄️",
-    "✨☀️ tmx SUPER MEGA POWER WAVE TSUNAMI BLAST ACTIVATED ACROSS THE ENTIRE SERVER DIMENSION ✨☀️",
-    "🔥👾 tmx ULTIMATE BEAST MODE ACTIVATED: GODZILA ROAR COMBINED WITH TIGER SPEED AND GORILLA SMASH 🔥👾",
-    "☀️☄️ tmx ULTIMATE SONIC BEEM DESTRUCTION RAY BURNING DOWN EVERYTHING IN SIGHT ☀️☄️",
-    "🔮😝 tmx BRAZIL TIGER HYPER DRIFT KICK MEETS GORILLA EARTHQUAKE SMASH COMBO OF DOOM 🔮😝",
-    "✨🔥 tmx MEGA POWER WAVE IS OVERWHELMING THE ENTIRE SERVER WITH TIDAL WAVE TSUNAMI ENERGY ✨🔥",
-    "👾🎍 tmx WARNING: GODZILA POWER IS COMPLETELY UNSTOPPABLE IN THE CHAT ROOM RIGHT NOW 👾🎍",
-    "🔥😝 tmx GORILLA PUNCH EARTHQUAKE SHAKE CAUSING MASSIVE DAMAGE EVERYWHERE 🔥😝",
-    "✨🎐 tmx SONIC BEEM CHARGING UP TO MAXIMUM OVERDRIVE POWER LEVEL INFINITE LIGHTNING SPEED ✨🎐",
-    "☀️👾 tmx BRAZIL TIGER JUNGLE FURY SAVAGE ATTACK SWEEPING AWAY ALL OPPONENTS IN THE ARENA ☀️👾",
-    "🔮☄️ tmx MEGA POWER WAVE WASHING AWAY EVERY SINGLE PLAYER WITH AN OCEANIC TSUNAMI STORM 🔮☄️",
-    "🔥✨ tmx GODZILA ATOMIC BREATH READY TO FIRE ACROSS THE SKIES BRINGING TOTAL ANNIHILATION 🔥✨",
-    "😝☀️ tmx ULTRA SUPER SAIYAN GORILLA RAGE UNLEASHED WITH PRIMAL INSTINCT ☀️",
-    "🎐🔮 tmx SONIC BEEM SPEED OF LIGHT BEATDOWN LEAVING ONLY ELECTRIC SPARKS IN THE AIR 🎐🔮",
-    "☄️👾 tmx BRAZIL TIGER CLAW SLASH OF DOOM CUTTING THROUGH DIMENSIONS WITH HYPER PRECISION ☄️👾",
-    "✨🔥 tmx SUPER MEGA POWER WAVE TSUNAMI STORM CRASHING INTO THE MAIN GATES WITH FORCE ✨🔥",
-    "😝🎐 tmx GODZILA VS GORILLA ULTIMATE CLASH OF THE TITANS BATTLE OF THE CENTURY 😝🎐",
-    "🔥🔮 tmx SONIC BEEM THUNDERSTORM STRIKE SHATTERING THE SOUND BARRIER 🔥🔮",
-    "🎍✨ tmx BRAZIL TIGER HYPER DRIFT KICK DRIFTING ACROSS THE MAP AT LIGHTNING SPEED 🎍✨",
-    "☀️☄️ tmx MEGA POWER WAVE MAXIMUM OVERDRIVE TIDAL WAVE ENERGY SURGE ACTIVATED ☀️☄️",
-    "🔥👾 tmx ULTIMATE GODZILA TAIL WHIP DESTRUCTION LEVEL 9999 ACTIVATED IN THE SECTOR 🔥👾",
-    "✨🎐 tmx GORILLA CHEST BEAT SOUNDWAVE BLAST SHAKING THE FOUNDATIONS OF THE EARTH ✨🎐",
-    "☀️☄️ tmx SONIC BEEM HYPER LASER BEAM MELTING EVERYTHING IN ITS PATH ☀️☄️",
-    "👾🔥 tmx BRAZIL TIGER SAVAGE BITE ATTACK OF THE JUNGLE KINGDOM LORDS 👾🔥",
-    "🎐🎍 tmx SUPER MEGA POWER WAVE OCEAN CRASH TIDAL WAVE DELUGE SWEEPING THE MAP CLEAN 🎐🎍",
-    "😝🔮 tmx GODZILA KING OF THE MONSTERS ROAR ECHOING ACROSS THE ENTIRE UNIVERSE 😝🔮",
-    "🔥👾 tmx GORILLA SMASH GROUND ZERO IMPACT CRATER CREATION PROTOCOL ONLINE 🔥👾",
-    "☀️🎐 tmx SONIC BEEM LIGHTNING SPEED DASH ACROSS ALL SERVERS ☀️🎐",
-    "🔮😝 tmx BRAZIL TIGER JUNGLE KING DOMINATION REIGNING SUPREME OVER EVERYONE 🔮😝",
-    "✨☄️ tmx MEGA POWER WAVE TIDAL WAVE ONSLAUGHT SWEEPING AWAY ALL DEFENSES ✨☄️",
-    "🔥👾 tmx ULTIMATE GODZILA HEAT RAY MELTDOWN CAUSING VOLCANIC ERUPTIONS EVERYWHERE 🔥👾"
+-- OVERHAULED MASTER TOXIC ARRAY LIST (COMPLETELY INTEGRATED)
+local ToxicAyanMsg = "🔮☄️ tmx MAI TOXIC KA AYAN😝TAP KARKE BOL AYAN PAPA OP✌🏻 🔮☄️"
+local PrebuiltToxicPhrases = {
+"🔥✨ tmx GODZILA POWER SONIC BEEM UNLEASHED 100% MAXIMUM DESTRUCTION OVERLOAD 🔥✨",
+"😝☄️ tmx SUPER ULTRA BRAZIL TIGER GORILLA PUNCH COMING THROUGH WITH UNSTOPPABLE JUNGLE FURY RAGE 😝☄️",
+"✨☀️ tmx SUPER MEGA POWER WAVE TSUNAMI BLAST ACTIVATED ACROSS THE ENTIRE SERVER DIMENSION ✨☀️",
+"🔥👾 tmx ULTIMATE BEAST MODE ACTIVATED: GODZILA ROAR COMBINED WITH TIGER SPEED AND GORILLA SMASH 🔥👾",
+"☀️☄️ tmx ULTIMATE SONIC BEEM DESTRUCTION RAY BURNING DOWN EVERYTHING IN SIGHT ☀️☄️",
+"🔮😝 tmx BRAZIL TIGER HYPER DRIFT KICK MEETS GORILLA EARTHQUAKE SMASH COMBO OF DOOM 🔮😝",
+"✨🔥 tmx MEGA POWER WAVE IS OVERWHELMING THE ENTIRE SERVER WITH TIDAL WAVE TSUNAMI ENERGY ✨🔥",
+"👾🎍 tmx WARNING: GODZILA POWER IS COMPLETELY UNSTOPPABLE IN THE CHAT ROOM RIGHT NOW 👾🎍",
+ToxicAyanMsg,
+"🔥😝 tmx GORILLA PUNCH EARTHQUAKE SHAKE CAUSING MASSIVE DAMAGE EVERYWHERE 🔥😝",
+"✨🎐 tmx SONIC BEEM CHARGING UP TO MAXIMUM OVERDRIVE POWER LEVEL INFINITE LIGHTNING SPEED ✨🎐",
+"☀️👾 tmx BRAZIL TIGER JUNGLE FURY SAVAGE ATTACK SWEEPING AWAY ALL OPPONENTS IN THE ARENA ☀️👾",
+"🔮☄️ tmx MEGA POWER WAVE WASHING AWAY EVERY SINGLE PLAYER WITH AN OCEANIC TSUNAMI STORM 🔮☄️",
+"🔥✨ tmx GODZILA ATOMIC BREATH READY TO FIRE ACROSS THE SKIES BRINGING TOTAL ANNIHILATION 🔥✨",
+"😝☀️ tmx ULTRA SUPER SAIYAN GORILLA RAGE UNLEASHED WITH PRIMAL INSTINCT 😝☀️",
+"🎐🔮 tmx SONIC BEEM SPEED OF LIGHT BEATDOWN LEAVING ONLY ELECTRIC SPARKS IN THE AIR 🎐🔮",
+"☄️👾 tmx BRAZIL TIGER CLAW SLASH OF DOOM CUTTING THROUGH DIMENSIONS WITH HYPER PRECISION ☄️👾",
+"✨🔥 tmx SUPER MEGA POWER WAVE TSUNAMI STORM CRASHING INTO THE MAIN GATES WITH FORCE ✨🔥",
+ToxicAyanMsg,
+"😝🎐 tmx GODZILA VS GORILLA ULTIMATE CLASH OF THE TITANS BATTLE OF THE CENTURY 😝🎐",
+"🔥🔮 tmx SONIC BEEM THUNDERSTORM STRIKE SHATTERING THE SOUND BARRIER 🔥🔮",
+"🎍✨ tmx BRAZIL TIGER HYPER DRIFT KICK DRIFTING ACROSS THE MAP AT LIGHTNING SPEED 🎍✨",
+"☀️☄️ tmx MEGA POWER WAVE MAXIMUM OVERDRIVE TIDAL WAVE ENERGY SURGE ACTIVATED ☀️☄️",
+"🔥👾 tmx ULTIMATE GODZILA TAIL WHIP DESTRUCTION LEVEL 9999 ACTIVATED IN THE SECTOR 🔥👾",
+"✨🎐 tmx GORILLA CHEST BEAT SOUNDWAVE BLAST SHAKING THE FOUNDATIONS OF THE EARTH ✨🎐",
+"☀️☄️ tmx SONIC BEEM HYPER LASER BEAM MELTING EVERYTHING IN ITS PATH ☀️☄️",
+"👾🔥 tmx BRAZIL TIGER SAVAGE BITE ATTACK OF THE JUNGLE KINGDOM LORDS 👾🔥",
+"🎐🎍 tmx SUPER MEGA POWER WAVE OCEAN CRASH TIDAL WAVE DELUGE SWEEPING THE MAP CLEAN 🎐🎍",
+ToxicAyanMsg,
+"😝🔮 tmx GODZILA KING OF THE MONSTERS ROAR ECHOING ACROSS THE ENTIRE UNIVERSE 😝🔮",
+"🔥👾 tmx GORILLA SMASH GROUND ZERO IMPACT CRATER CREATION PROTOCOL ONLINE 🔥👾",
+"☀️🎐 tmx SONIC BEEM LIGHTNING SPEED DASH ACROSS ALL SERVERS ☀️🎐",
+"🔮😝 tmx BRAZIL TIGER JUNGLE KING DOMINATION REIGNING SUPREME OVER EVERYONE 🔮😝",
+"✨☄️ tmx MEGA POWER WAVE TIDAL WAVE ONSLAUGHT SWEEPING AWAY ALL DEFENSES ✨☄️",
+"🔥👾 tmx ULTIMATE GODZILA HEAT RAY MELTDOWN CAUSING VOLCANIC ERUPTIONS EVERYWHERE 🔥👾",
+"🔥✨ tmx GODZILA POWER SONIC BEEM UNLEASHED 100% MAXIMUM DESTRUCTION OVERLOAD 🔥✨",
+"😝☄️ tmx SUPER ULTRA BRAZIL TIGER GORILLA PUNCH COMING THROUGH WITH UNSTOPPABLE JUNGLE FURY RAGE 😝☄️",
+"✨☀️ tmx SUPER MEGA POWER WAVE TSUNAMI BLAST ACTIVATED ACROSS THE ENTIRE SERVER DIMENSION ✨☀️"
 }
 
-local TextIn = CreateCustomValueSlider(SpammerList, "📝 SPAM TEXT:", "AYAN HUB ON TOP!", function(val) SpamText = tostring(val) end)
-local DelayIn = CreateCustomValueSlider(SpammerList, "⏱️ DELAY (SEC):", 2.4, function(val) SpamDelay = tonumber(val) or 2.4 end)
-
-CreateToggle(SpammerList, "🚀 START CHAT SPAMMER", function(v)
-    Toggles.Spammer = v
-    if SpamLoop then SpamLoop:Disconnect() SpamLoop = nil end
-    if v then
-        local index = 1
-        SpamLoop = game:GetService("RunService").Heartbeat:Connect(function()
-            if Toggles.Spammer then
-                local messageToSend = CustomSpamList[index] or SpamText
-                index = index + 1
-                if index > #CustomSpamList then index = 1 end
-                
-                local chatService = game:GetService("TextChatService")
-                if chatService and chatService:FindFirstChild("TextChannels") and chatService.TextChannels:FindFirstChild("RBXGeneral") then
-                    chatService.TextChannels.RBXGeneral:SendAsync(messageToSend)
-                else
-                    game:GetService("ReplicatedStorage").DefaultChatSystemChatEvents.SayMessageRequest:FireServer(messageToSend, "All")
-                end
-                task.wait(SpamDelay) -- Dynamic configuration spacing loop parameter delay field
-            end
-        end)
-    end
+CreateToggle(SpammerList, "🚀 START 10-SLOT SPAMMER", function(v)
+Toggles.Spammer = v if SpamLoop then SpamLoop:Disconnect() SpamLoop = nil end
+if v then
+local slotIndex, phraseIndex = 1, 1
+SpamLoop = game:GetService("RunService").Heartbeat:Connect(function()
+if Toggles.Spammer then
+local targetName = TargetNamesList[slotIndex] or "" slotIndex = slotIndex + 1 if slotIndex > 10 then slotIndex = 1 end
+local messageText = ""
+if SpamText ~= "" then
+messageText = (targetName ~= "" and "@" .. targetName .. " " or "") .. SpamText
+else
+local randomPhrase = PrebuiltToxicPhrases[phraseIndex] phraseIndex = phraseIndex + 1 if phraseIndex > #PrebuiltToxicPhrases then phraseIndex = 1 end
+messageText = (targetName ~= "" and "@" .. targetName .. " " or "") .. randomPhrase
+end
+local chatService = game:GetService("TextChatService")
+if chatService and chatService:FindFirstChild("TextChannels") and chatService.TextChannels:FindFirstChild("RBXGeneral") then chatService.TextChannels.RBXGeneral:SendAsync(messageText) else game:GetService("ReplicatedStorage").DefaultChatSystemChatEvents.SayMessageRequest:FireServer(messageText, "All") end
+task.wait(SpamDelay)
+end
+end)
+end
+end)
+-- ANTI-AFK PLATFORM
+local StatsBox = Instance.new("Frame")
+StatsBox.Parent = SpammerList StatsBox.BackgroundColor3 = Color3.fromRGB(18, 18, 18) StatsBox.Size = UDim2.new(1, -10, 0, 85) StyleElement(StatsBox, 6, Color3.fromRGB(30, 30, 30))
+local TimerLabel = Instance.new("TextLabel", StatsBox)
+TimerLabel.BackgroundTransparency = 1 TimerLabel.Position = UDim2.new(0.04, 0, 0.15, 0) TimerLabel.Size = UDim2.new(0.9, 0, 0, 20) TimerLabel.Font = Enum.Font.GothamBold TimerLabel.Text = "AFK Active Time: 00:00:00" TimerLabel.TextColor3 = Color3.fromRGB(180, 180, 180) TimerLabel.TextSize = 11 TimerLabel.TextXAlignment = Enum.TextXAlignment.Left
+local CounterLabel = Instance.new("TextLabel", StatsBox)
+CounterLabel.BackgroundTransparency = 1 CounterLabel.Position = UDim2.new(0.04, 0, 0.55, 0) CounterLabel.Size = UDim2.new(0.9, 0, 0, 20) CounterLabel.Font = Enum.Font.GothamBold CounterLabel.Text = "Total Bypasses: 0" CounterLabel.TextColor3 = Color3.fromRGB(0, 170, 255) CounterLabel.TextSize = 11 CounterLabel.TextXAlignment = Enum.TextXAlignment.Left
+local function FormatTime(seconds)
+local hours = math.floor(seconds / 3600) local mins = math.floor((seconds % 3600) / 60) senateSecs = math.floor(seconds % 60)
+return string.format("%02d:%02d:%02d", hours, mins, senateSecs)
+end
+CreateToggle(SpammerList, "🛡️ ACTIVATE ANTI-AFK BYPASS", function(v)
+Toggles.AntiAFK = v
+if AFKConnection then AFKConnection:Disconnect() AFKConnection = nil end
+if AFKTimerLoop then AFKTimerLoop:Disconnect() AFKTimerLoop = nil end
+if v then
+AFKStartTime = os.time()
+AFKTimerLoop = game:GetService("RunService").Heartbeat:Connect(function()
+if Toggles.AntiAFK then
+TimerLabel.Text = "AFK Active Time: " .. FormatTime(os.time() - AFKStartTime)
+CounterLabel.Text = "Total Bypasses: " .. tostring(TotalBypassesCount)
+end
+end)
+local VirtualUser = game:GetService("VirtualUser")
+AFKConnection = game.Players.LocalPlayer.Idled:Connect(function()
+if Toggles.AntiAFK then
+VirtualUser:Button2Down(Vector2.new(0,0), workspace.CurrentCamera.CFrame)
+task.wait(0.3)
+VirtualUser:Button2Up(Vector2.new(0,0), workspace.CurrentCamera.CFrame)
+TotalBypassesCount = TotalBypassesCount + 1
+end
+end)
+else
+TimerLabel.Text = "AFK Active Time: 00:00:00"
+CounterLabel.Text = "Total Bypasses: " .. tostring(TotalBypassesCount)
+end
 end)
